@@ -1,16 +1,10 @@
 import "dotenv/config";
 
-import {
-  PgDataType,
-  DBModel,
-  fn,
-  RawQuery,
-  initializePgQueryBuilder,
-} from "../src";
+import { PgDataType, DBModel, fn, RawQuery, initPgQueryBuilder } from "../src";
 
 const DB_PORT = parseInt(process.env.POSTGRES_DB_PORT || "5432", 10);
 
-initializePgQueryBuilder({
+initPgQueryBuilder({
   host: process.env.POSTGRES_DB_HOST,
   user: process.env.POSTGRES_DB_USER_NAME,
   password: process.env.POSTGRES_DB_PASSWORD,

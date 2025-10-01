@@ -1,6 +1,6 @@
 import { pgConnect } from "./pgHelper";
 
-export const initializePgQueryBuilder = (params: {
+export const initPgQueryBuilder = (params: {
   host: string;
   user: string;
   password: string;
