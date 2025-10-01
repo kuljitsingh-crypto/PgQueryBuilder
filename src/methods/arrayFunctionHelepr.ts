@@ -1,13 +1,13 @@
-import { PgDataType } from '../constants/dataTypes';
-import { functionalDataType } from '../constants/internalDataTypes';
-import { Primitive } from '../globalTypes';
-import { CallableFieldParam } from '../internalTypes';
-import { getInternalContext } from './ctxHelper';
-import { ArrayArg, getFieldValue } from './fieldFunc';
+import { PgDataType } from "../constants/dataTypes";
+import { Primitive } from "../globalTypes";
+import { CallableFieldParam } from "../internalTypes";
+import { getInternalContext } from "./ctxHelper";
+import { ArrayArg, getFieldValue } from "./fieldFunc";
+import { functionalDataType } from "./funcitonalDataTypes";
 import {
   attachMethodToSymbolRegistry,
   getValidCallableFieldValues,
-} from './helperFunction';
+} from "./helperFunction";
 
 type AllowedKeys = Exclude<
   keyof typeof PgDataType,
@@ -18,16 +18,16 @@ export function arrayFn<Model, P extends Primitive = Primitive>(
   arg: ArrayArg<P, Model>[],
   arrOptions?: {
     type?: (typeof PgDataType)[AllowedKeys];
-  },
+  }
 ): any {
   const callable = (options: CallableFieldParam) => {
     const { type } = arrOptions || {};
     const { allowedFields, preparedValues, groupByFields } =
       getValidCallableFieldValues(
         options,
-        'allowedFields',
-        'preparedValues',
-        'groupByFields',
+        "allowedFields",
+        "preparedValues",
+        "groupByFields"
       );
     const value = getFieldValue(
       null,
@@ -35,7 +35,7 @@ export function arrayFn<Model, P extends Primitive = Primitive>(
       preparedValues,
       groupByFields,
       allowedFields,
-      { customArrayType: type },
+      { customArrayType: type }
     );
     return {
       col: value,
@@ -43,6 +43,6 @@ export function arrayFn<Model, P extends Primitive = Primitive>(
       ctx: getInternalContext(),
     };
   };
-  attachMethodToSymbolRegistry(callable, 'arrayFn');
+  attachMethodToSymbolRegistry(callable, "arrayFn");
   return callable;
 }

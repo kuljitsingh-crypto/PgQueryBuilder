@@ -1,57 +1,57 @@
-import { Primitive } from '../globalTypes';
-import { throwError } from './errorHelper';
-import { attachArrayWith } from './helperFunction';
-import { toJsonStr } from './jsonFunctionHelepr';
-import { isNonNullableValue, isNullableValue } from './util';
+import { Primitive } from "../globalTypes";
+import { throwError } from "./errorHelper";
+import { attachArrayWith } from "./helperFunction";
+import { toJsonStr } from "./jsonFunctionHelepr";
+import { isNonNullableValue, isNullableValue } from "./util";
 
 const funcs = {
-  type: 'type',
-  size: 'size',
-  boolean: 'boolean',
-  string: 'string',
-  double: 'double',
-  ceiling: 'ceiling',
-  floor: 'floor',
-  abs: 'abs',
-  bigint: 'bigint',
-  decimal: 'decimal',
-  integer: 'integer',
-  number: 'number',
-  datetime: 'datetime',
-  date: 'date',
-  time: 'time',
-  timeTz: 'time_tz',
-  timestamp: 'timestamp',
-  timestampTz: 'timestamp_tz',
-  keyvalue: 'keyvalue',
-  exists: 'exists',
-  cardinality: 'cardinality',
+  type: "type",
+  size: "size",
+  boolean: "boolean",
+  string: "string",
+  double: "double",
+  ceiling: "ceiling",
+  floor: "floor",
+  abs: "abs",
+  bigint: "bigint",
+  decimal: "decimal",
+  integer: "integer",
+  number: "number",
+  datetime: "datetime",
+  date: "date",
+  time: "time",
+  timeTz: "time_tz",
+  timestamp: "timestamp",
+  timestampTz: "timestamp_tz",
+  keyvalue: "keyvalue",
+  exists: "exists",
+  cardinality: "cardinality",
 };
 
 const operator = {
-  eq: '==',
-  neq: '!=',
-  lte: '<=',
-  lt: '<',
-  gte: '>=',
-  gt: '>',
+  eq: "==",
+  neq: "!=",
+  lte: "<=",
+  lt: "<",
+  gte: ">=",
+  gt: ">",
 };
 
 const constant = {
-  startBracket: '(',
-  endBracket: ')',
-  key: 'key',
-  wildcard: '*',
-  recursive: '**',
-  val: 'value',
-  and: '&&',
-  or: '||',
-  not: '!',
-  base: '$',
-  likeRegex: 'like_regex',
-  is: 'is',
-  contextBase: '@',
-  context: '?',
+  startBracket: "(",
+  endBracket: ")",
+  key: "key",
+  wildcard: "*",
+  recursive: "**",
+  val: "value",
+  and: "&&",
+  or: "||",
+  not: "!",
+  base: "$",
+  likeRegex: "like_regex",
+  is: "is",
+  contextBase: "@",
+  context: "?",
 } as const;
 
 const keysPrefixWithBase = new Set([constant.wildcard, constant.recursive]);
@@ -113,7 +113,7 @@ const funcHelper = {
     caller: JPathBuilder,
     key: Primitive,
     addDot = true,
-    isReplace = false,
+    isReplace = false
   ) {
     const ref = this.getValidRef(caller);
     if (keysPrefixWithBase.has(key as any) && !funcHelper.isInsideCtx(caller)) {
@@ -170,10 +170,10 @@ function prepareQueryOperator(name: keyof typeof operator) {
       this,
       false,
       false,
-      ' ',
+      " ",
       val,
-      ' ',
-      param,
+      " ",
+      param
     );
   };
 }
@@ -205,7 +205,7 @@ export class JPathBuilder {
     return funcHelper.addMultiProperties(this, addDot, isReplace, ...params);
   }
 
-  grpStart(key: string | number | null) {
+  startGrp(key: string | number | null) {
     let ref: JPathBuilder = this;
     if (funcHelper.isInsideCtx(this)) {
       funcHelper.addProperty(this, constant.startBracket, false, true);
@@ -219,12 +219,12 @@ export class JPathBuilder {
     return ref;
   }
 
-  grpEnd() {
+  endGrp() {
     return this.#addMultiProperties(false, false, constant.endBracket);
   }
-  ctxStart(key: string | number, at?: number | (typeof constant)['wildcard']) {
+  startCtx(key: string | number, at?: number | (typeof constant)["wildcard"]) {
     this.key(key);
-    if (typeof at !== 'undefined') {
+    if (typeof at !== "undefined") {
       this.at(at as any);
     }
     funcHelper.changeBase(this, constant.contextBase);
@@ -232,15 +232,15 @@ export class JPathBuilder {
     return this.#addMultiProperties(
       false,
       false,
-      ' ',
+      " ",
       constant.context,
-      ' ',
+      " ",
       constant.startBracket,
-      constant.contextBase,
+      constant.contextBase
     );
   }
 
-  ctxEnd() {
+  endCtx() {
     funcHelper.endCtx(this);
     funcHelper.changeBase(this, constant.base);
     return this.#addMultiProperties(false, false, constant.endBracket);
@@ -259,7 +259,7 @@ export class JPathBuilder {
       return this;
     }
     const shouldAppendBase = key !== funcHelper.base(this);
-    key = typeof key === 'string' && shouldAppendBase ? toJsonStr(key) : key;
+    key = typeof key === "string" && shouldAppendBase ? toJsonStr(key) : key;
     if (shouldAppendBase && !funcHelper.isInsideCtx(this)) {
       funcHelper.addBase(this);
     }
@@ -278,7 +278,7 @@ export class JPathBuilder {
   }
 
   at(index?: number) {
-    let strIndex = typeof index === 'number' ? index : '*';
+    let strIndex = typeof index === "number" ? index : "*";
     strIndex = `[${strIndex}]`;
     if (!funcHelper.isInsideCtx(this)) {
       funcHelper.addBase(this);
@@ -290,15 +290,15 @@ export class JPathBuilder {
     return this.#addMultiProperties(
       false,
       false,
-      ' ',
+      " ",
       constant.likeRegex,
-      ' ',
-      regex,
+      " ",
+      regex
     );
   }
 
   is(value: string) {
-    return this.#addMultiProperties(false, false, ' ', constant.is, ' ', value);
+    return this.#addMultiProperties(false, false, " ", constant.is, " ", value);
   }
 
   and() {
@@ -306,13 +306,13 @@ export class JPathBuilder {
       return this.#addMultiProperties(
         false,
         false,
-        ' ',
+        " ",
         constant.and,
-        ' ',
-        constant.contextBase,
+        " ",
+        constant.contextBase
       );
     }
-    return this.#addMultiProperties(false, false, ' ', constant.and, ' ');
+    return this.#addMultiProperties(false, false, " ", constant.and, " ");
   }
 
   or() {
@@ -320,13 +320,13 @@ export class JPathBuilder {
       return this.#addMultiProperties(
         false,
         false,
-        ' ',
+        " ",
         constant.or,
-        ' ',
-        constant.contextBase,
+        " ",
+        constant.contextBase
       );
     }
-    return this.#addMultiProperties(false, false, ' ', constant.or, ' ');
+    return this.#addMultiProperties(false, false, " ", constant.or, " ");
   }
 
   build() {

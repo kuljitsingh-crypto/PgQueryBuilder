@@ -751,51 +751,51 @@ Order.init(
 //     //     // .and()
 //     //     // .key('salary')
 //     //     // .gte(75000)
-//     //     // .grpStart(null)
+//     //     // .startGrp(null)
 //     //     // .key('age')
 //     //     // .gt(30)
-//     //     // .grpEnd()
+//     //     // .endGrp()
 //     //     // .or()
-//     //     // .grpStart(null)
+//     //     // .startGrp(null)
 //     //     // .key('salary')
 //     //     // .lt(50000)
-//     //     // .grpEnd()
-//     //     .ctxStart('skills', '*')
+//     //     // .endGrp()
+//     //     .startCtx('skills', '*')
 //     //     .likeRegex('^J')
-//     //     .ctxEnd()
+//     //     .endCtx()
 //     //     // .keyvalue()
 //     //     // .asKey()
-//     //     // .ctxStart('$')
-//     //     // .grpStart()
+//     //     // .startCtx('$')
+//     //     // .startGrp()
 //     //     // .key('salary')
 //     //     // .gt(65000)
 //     //     // .and()
 //     //     // .key('salary')
 //     //     // .lte(75000)
-//     //     // .grpEnd()
+//     //     // .endGrp()
 //     //     // .or()
 //     //     // .key('age')
 //     //     // .eq(28)
-//     //     // .grpEnd()
-//     //     // .ctxEnd()
+//     //     // .endGrp()
+//     //     // .endCtx()
 //     //     // .or()
-//     //     // .ctxStart('age')
+//     //     // .startCtx('age')
 //     //     // .eq(28)
-//     //     // .ctxEnd()
-//     //     // .grpEnd()
+//     //     // .endCtx()
+//     //     // .endGrp()
 //     //     // .not()
-//     //     // .grpStart(null)
-//     //     // .grpStart('salary')
+//     //     // .startGrp(null)
+//     //     // .startGrp('salary')
 //     //     // .lt(75000)
 //     //     // .and()
 //     //     // .key('salary')
 //     //     // .gt(60000)
-//     //     // .grpEnd()
+//     //     // .endGrp()
 //     //     // .or()
-//     //     // .grpStart('age')
+//     //     // .startGrp('age')
 //     //     // .gt(20)
-//     //     // .grpEnd()
-//     //     // .grpEnd()
+//     //     // .endGrp()
+//     //     // .endGrp()
 //     //     .build(),
 //     // ),
 //     // fn.custom({ name: 'va', isCallableOp: false }, 2, 3),
@@ -875,6 +875,13 @@ Order.init(
 // WHERE final_sq.avg_salary > 50000;
 
 //SELECT * FROM (((SELECT * FROM basket_a AS t UNION ALL (SELECT * FROM basket_c)) INTERSECT (SELECT * FROM basket_d)INTERSECT (SELECT * FROM basket_e))) AS results WHERE (a = $1)
+
+fn.runDoBlock({
+  queries: ["RAISE NOTICE 'Hello from DO block!';"],
+  showQuery: true,
+}).then((res) => {
+  console.log("do block query->", res);
+});
 
 (function () {
   console.log("Test module run");

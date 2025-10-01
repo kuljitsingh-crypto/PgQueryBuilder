@@ -1,5 +1,6 @@
 import { Primitive } from "../globalTypes";
-import { functionalDataType, simpleDataType } from "./internalDataTypes";
+import { functionalDataType } from "../methods/funcitonalDataTypes";
+import { simpleDataType } from "./simpleDataTypes";
 
 export const PgDataType = {
   ...simpleDataType,

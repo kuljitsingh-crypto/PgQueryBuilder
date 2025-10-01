@@ -1,5 +1,7 @@
 import { DB_KEYWORDS_TYPE } from "./constants/dbkeywords";
+import { pgException } from "./constants/exceptions";
 import { Reference } from "./constants/foreignkeyActions";
+import { supportedLang } from "./constants/language";
 import {
   ARRAY_OP_KEYS,
   PRIMITIVE_OP_KEYS,
@@ -7,6 +9,7 @@ import {
   SUBQUERY_OP_KEYS,
 } from "./constants/operators";
 import { SetOperationType } from "./constants/setOperations";
+import { simpleDataType } from "./constants/simpleDataTypes";
 import { TableJoinType } from "./constants/tableJoin";
 import { Primitive } from "./globalTypes";
 
@@ -332,4 +335,18 @@ export type RawQuery =
 
 export type QueryExtraOptions = {
   showQuery: boolean;
+};
+
+export type DOBlock = {
+  variable?: {
+    [Key in string]: {
+      type: keyof typeof simpleDataType;
+      value: Primitive | Primitive[];
+    };
+  };
+  onExceptions?: {
+    [Key in keyof typeof pgException]?: string | null;
+  };
+  language?: keyof typeof supportedLang;
+  queries: string[];
 };

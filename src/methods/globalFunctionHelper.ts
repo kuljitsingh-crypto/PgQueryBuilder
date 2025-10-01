@@ -1,12 +1,16 @@
-import { aggregateFn } from './aggregateFunctionHelper';
-import { arrayFn } from './arrayFunctionHelepr';
-import { colFn } from './columnFunctionHelepr';
-import { fieldFn } from './fieldFunctionHelper';
-import { fromJsonStr, toJsonStr } from './jsonFunctionHelepr';
-import { jsonPathFn } from './jsonPathHelper';
-import { JPathBuilder } from './jsonQueryBuilder';
-import { typeCastFn } from './typeCastHelper';
-import { frameFn, windowFn } from './windowFunctionHelper';
+import { aggregateFn } from "./aggregateFunctionHelper";
+import { arrayFn } from "./arrayFunctionHelepr";
+import { colFn } from "./columnFunctionHelepr";
+import {
+  executeDoBlock as executeDo,
+  runDoBlock as runDo,
+} from "./doBlockHelper";
+import { fieldFn } from "./fieldFunctionHelper";
+import { fromJsonStr, toJsonStr } from "./jsonFunctionHelepr";
+import { jsonPathFn } from "./jsonPathHelper";
+import { JPathBuilder } from "./jsonQueryBuilder";
+import { typeCastFn } from "./typeCastHelper";
+import { frameFn, windowFn } from "./windowFunctionHelper";
 
 type AggrKeys = keyof typeof aggregateFn;
 type FrameKeys = keyof typeof frameFn;
@@ -82,6 +86,35 @@ class GlobalFunction {
   jQuery(root?: string): JPathBuilder {
     const jPathBuilder = new JPathBuilder(root);
     return jPathBuilder;
+  }
+  createCustomType(name: string) {}
+
+  /**
+ * 
+ * @param {object} params
+ * @param {DOBlock['queries']} params.queries
+ * @param {DOBlock['language']} [params.language]
+ * @param {DOBlock['variable']} [params.variable]
+ * @param {DOBlock['onExceptions']} [params.onExceptions ]- If You wan to raise custom error Message. Pass message as value,
+   If you did not want to do anything pass null as value. If Leave undefined, raise default exception message.
+ */
+  buildDoBlock(
+    ...args: Parameters<typeof executeDo>
+  ): ReturnType<typeof executeDo> {
+    return executeDo(...args);
+  }
+  /* 
+ * @param {object} params
+ * @param {DOBlock['queries']} params.queries
+ * @param {DOBlock['language']} [params.language]
+ * @param {DOBlock['variable']} [params.variable]
+ * @param {DOBlock['onExceptions']} [params.onExceptions ]- If You wan to raise custom error Message. Pass message as value,
+   If you did not want to do anything pass null as value. If Leave undefined, raise default exception message.
+ */
+  async runDoBlock(
+    ...args: Parameters<typeof runDo>
+  ): ReturnType<typeof runDo> {
+    return runDo(...args);
   }
 }
 
