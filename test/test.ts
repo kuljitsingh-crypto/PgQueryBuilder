@@ -839,7 +839,8 @@ Order.init(
 // });
 
 // RawQuery.query(
-//   'SELECT * FROM basket_a AS t WHERE EXISTS (SELECT 1 FROM ((SELECT * FROM basket_b UNION SELECT * FROM basket_c) INTERSECT SELECT * FROM basket_d) AS y WHERE (b = t.a))',
+//   "SELECT * FROM information_schema.columns Where table_name = 'companies'"
+//   //'SELECT * FROM basket_a AS t WHERE EXISTS (SELECT 1 FROM ((SELECT * FROM basket_b UNION SELECT * FROM basket_c) INTERSECT SELECT * FROM basket_d) AS y WHERE (b = t.a))',
 //   // 'SELECT * FROM basket_a AS t WHERE EXISTS ((SELECT 1 FROM basket_b WHERE (b = t.a) UNION SELECT 1 FROM basket_c) INTERSECT SELECT 1 FROM basket_d)',
 //   // 'SELECT * FROM ((SELECT * FROM basket_a UNION SELECT * FROM basket_b) UNION ALL SELECT * FROM basket_c) AS t',
 //   // 'SELECT * FROM basket_a AS t WHERE EXISTS (SELECT 1 FROM basket_b WHERE (b = t.a) UNION SELECT 1 FROM basket_c)',
@@ -856,7 +857,7 @@ Order.init(
 //   // 'SELECT (SELECT c FROM basket_c where c=3 ) + (SELECT b FROM basket_b where b=2 ) AS sum FROM basket_a',
 //   // ['30 days'],
 // ).then((res) => {
-//   console.dir({ 'raw Query Result->': res }, { depth: null });
+//   console.dir({ "raw Query Result->": res }, { depth: null });
 // });
 
 // SELECT final_sq.department_id, final_sq.avg_salary
@@ -876,12 +877,18 @@ Order.init(
 
 //SELECT * FROM (((SELECT * FROM basket_a AS t UNION ALL (SELECT * FROM basket_c)) INTERSECT (SELECT * FROM basket_d)INTERSECT (SELECT * FROM basket_e))) AS results WHERE (a = $1)
 
-fn.runDoBlock({
-  queries: ["RAISE NOTICE 'Hello from DO block!';"],
-  showQuery: true,
-}).then((res) => {
-  console.log("do block query->", res);
-});
+fn.doBlock
+  .run({
+    queries: ["CREATE EXTENSION  hstore;"],
+    onExceptions: { duplicateObject: null },
+    showQuery: true,
+  })
+  .then((res) => {
+    console.log("do block query->", res);
+  })
+  .catch((err) => {
+    console.log("do block err->", err);
+  });
 
 (function () {
   console.log("Test module run");

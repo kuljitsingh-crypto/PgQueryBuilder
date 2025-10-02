@@ -3,6 +3,10 @@ import { TABLE_JOIN } from "../constants/tableJoin";
 import { AllowedFields } from "../internalTypes";
 import { attachArrayWith } from "./helperFunction";
 
+function throwConstructorNotAvailable(): never {
+  throw new Error("This class cannot be instantiated!");
+}
+
 function throwDBInitializeFailed(): never {
   throw new Error("Initialize query builder before using it.");
 }
@@ -280,6 +284,7 @@ export const throwError = {
   invalidJsonSlicingType: throwInvalidJsonPathSlicing,
   invalidJsonQueryBuilderType: throwInvalidJsonQuery,
   invalidDBInitiationType: throwDBInitializeFailed,
+  invalidConstructorType: throwConstructorNotAvailable,
 };
 
 export const errorHandler = (
@@ -288,7 +293,9 @@ export const errorHandler = (
   error: Error
 ) => {
   const strValues = attachArrayWith.coma(flatedValues);
-  const msg = `Error executing query: "${query}" with params "(${strValues})". Error: ${error.message}`;
+  const paramsMaybe =
+    strValues.length > 0 ? ` with params "(${strValues})` : "";
+  const msg = `Error executing query: "${query}" ${paramsMaybe}". Postgres Error: ${error.message}`;
   const err = new Error(msg);
   throw err;
 };

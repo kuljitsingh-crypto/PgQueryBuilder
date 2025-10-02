@@ -43,6 +43,7 @@ export const DB_KEYWORDS = {
   end: "END",
   language: "LANGUAGE",
   exception: "EXCEPTION",
+  raiseNotice: "RAISE NOTICE",
 } as const;
 
 export const WHERE_KEYWORD = "where";

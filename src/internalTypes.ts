@@ -286,9 +286,12 @@ export type SetOperationFilter<Model> = ModelAndAlias<Model> & {
 
 export type WhereClauseKeys = "$and" | "$or" | string;
 
-export type ExtraOptions = {
+export type TableCreationOptions = {
   tableName: string;
   reference?: Reference;
+  timestamps?:
+    | boolean
+    | Partial<{ createdAt: boolean | string; updatedAt: boolean | string }>;
 };
 
 export type CallableFieldParam = Partial<{

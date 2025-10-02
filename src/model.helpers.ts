@@ -1,10 +1,11 @@
+import { DBMiddleware } from "./clases/middleware";
 import { Table, TableValues } from "./constants/dataTypes";
 import { DB_KEYWORDS } from "./constants/dbkeywords";
 import { ReferenceTable } from "./constants/foreignkeyActions";
 import { Primitive } from "./globalTypes";
 import {
   AllowedFields,
-  ExtraOptions,
+  TableCreationOptions,
   FindQueryAttributes,
   GroupByFields,
   PreparedValues,
@@ -162,7 +163,7 @@ export class DBQuery {
 export class DBModel extends DBQuery {
   static init<T extends string>(
     modelObj: Table<T>,
-    option: ExtraOptions & Partial<QueryExtraOptions>
+    option: TableCreationOptions & Partial<QueryExtraOptions>
   ) {
     const { tableName, reference = {}, showQuery } = option;
     this.tableName = tableName;
@@ -254,6 +255,13 @@ export class DBModel extends DBQuery {
       values.push(`${DB_KEYWORDS.onUpdate} ${onUpdate}`);
     }
     return attachArrayWith.space(values);
+  }
+}
+
+export class PgQueryBuilder extends DBMiddleware {
+  constructor() {
+    super();
+    return throwError.invalidConstructorType();
   }
 }
 
