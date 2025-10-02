@@ -1,4 +1,4 @@
-import { DB_KEYWORDS } from '../constants/dbkeywords';
+import { DB_KEYWORDS } from "../constants/dbkeywords";
 import {
   DOUBLE_FIELD_OP,
   SINGLE_FIELD_OP,
@@ -25,8 +25,8 @@ import {
   NOT_FIELD_OP,
   ARRAY_INDEX_OP,
   ARRAY_SLICE_OP,
-} from '../constants/fieldFunctions';
-import { Primitive } from '../globalTypes';
+} from "../constants/fieldFunctions";
+import { Primitive } from "../globalTypes";
 import {
   AllowedFields,
   CallableField,
@@ -34,21 +34,21 @@ import {
   CaseSubquery,
   GroupByFields,
   PreparedValues,
-} from '../internalTypes';
-import { getInternalContext } from './ctxHelper';
-import { throwError } from './errorHelper';
-import { Arg, getFieldValue } from './fieldFunc';
+} from "../internalTypes";
+import { getInternalContext } from "./ctxHelper";
+import { throwError } from "./errorHelper";
+import { Arg, getFieldValue } from "./fieldFunc";
 import {
-  attachArrayWith,
   attachMethodToSymbolRegistry,
   getValidCallableFieldValues,
-} from './helperFunction';
+} from "./helperFunction";
 import {
+  attachArrayWith,
   isNonEmptyString,
   isNonNullableValue,
   isValidArray,
   isValidObject,
-} from './util';
+} from "./util";
 
 type CustomFieldOptions = {
   name: string;
@@ -74,7 +74,7 @@ type SingleFieldOpCb = <Model>(b: Arg<Model>) => CallableField;
 type TripleFieldOpCb = <Model>(
   a: Arg<Model>,
   b: Arg<Model>,
-  c: Arg<Model>,
+  c: Arg<Model>
 ) => CallableField;
 
 type MultipleFieldOpCb = <Model>(...args: Arg<Model>[]) => CallableField;
@@ -101,8 +101,8 @@ type Func = {
               ? CustomFieldOp
               : MultipleFieldOpCb;
 };
-type OperandType = 'single' | 'double' | 'multiple' | 'triple' | 'noParam';
-type AttachMode = 'operatorInBetween' | 'default' | 'custom' | 'arrayOperator';
+type OperandType = "single" | "double" | "multiple" | "triple" | "noParam";
+type AttachMode = "operatorInBetween" | "default" | "custom" | "arrayOperator";
 
 type CommonParamForOpGroup = {
   attachMode: AttachMode;
@@ -151,7 +151,7 @@ const attachOperator = (
   ...values: Primitive[]
 ) =>
   callable
-    ? attachArrayWith.customSep([op, `(${attachArrayWith.coma(values)})`], '')
+    ? attachArrayWith.customSep([op, `(${attachArrayWith.coma(values)})`], "")
     : attachArrayWith.space([op, attachArrayWith.coma(values)]);
 
 const attachOpInBtwOperator = (
@@ -173,8 +173,8 @@ const customAttach =
   (attachCond: string[]) =>
   (callable: boolean, op: string, ...values: Primitive[]) => {
     const valuesLen = values.length;
-    const lastAttachStr = attachCond[attachCond.length - 1] ?? '';
-    const attachedVal: Primitive[] = [values[0] ?? ''];
+    const lastAttachStr = attachCond[attachCond.length - 1] ?? "";
+    const attachedVal: Primitive[] = [values[0] ?? ""];
     for (let i = 1; i < valuesLen; i++) {
       const attachType = attachCond[i - 1] ?? lastAttachStr;
       attachedVal.push(attachType, values[i]);
@@ -184,8 +184,8 @@ const customAttach =
 
 const arrayAttach = (callable: boolean, op: string, ...values: Primitive[]) => {
   const [first, ...rest] = values;
-  const valuesStr = attachArrayWith.customSep(rest, ':');
-  return attachArrayWith.noSpace([first, '[', valuesStr, ']']);
+  const valuesStr = attachArrayWith.customSep(rest, ":");
+  return attachArrayWith.noSpace([first, "[", valuesStr, "]"]);
 };
 
 const attachOp = (
@@ -203,15 +203,15 @@ const attachOp = (
   let opCb: (callable: boolean, op: string, ...values: Primitive[]) => string =
     attachOperator;
   switch (attachMode) {
-    case 'operatorInBetween':
+    case "operatorInBetween":
       opCb = attachOpInBtwOperator;
       break;
-    case 'custom':
+    case "custom":
       if (isValidArray(attachCond)) {
         opCb = customAttach(attachCond);
       }
       break;
-    case 'arrayOperator':
+    case "arrayOperator":
       opCb = arrayAttach;
       break;
   }
@@ -227,7 +227,7 @@ const resolveOperand = <Model>(
   groupByFields: GroupByFields,
   isNullColAllowed: boolean,
   prefixValue: string | null,
-  suffixValue: string | null,
+  suffixValue: string | null
 ) => {
   const isValidPrefixValue = isNonEmptyString(prefixValue);
   const isValidSuffixValue = isNonEmptyString(suffixValue);
@@ -238,10 +238,10 @@ const resolveOperand = <Model>(
       arg,
       preparedValues,
       groupByFields,
-      allowedFields,
+      allowedFields
     );
     if (value === null && !isNullColAllowed) {
-      throwError.invalidColumnNameType('null', allowedFields);
+      throwError.invalidColumnNameType("null", allowedFields);
     }
     operandsRef.push(value);
   });
@@ -285,7 +285,7 @@ const prepareFields = <Model>(params: PrepareCb<Model>) => {
     groupByFields,
     isNullColAllowed,
     prefixValue,
-    suffixValue,
+    suffixValue
   );
   return attachOp(
     zeroArgAllowed,
@@ -293,7 +293,7 @@ const prepareFields = <Model>(params: PrepareCb<Model>) => {
     op,
     attachMode,
     attachCond,
-    ...operands,
+    ...operands
   );
 };
 
@@ -302,15 +302,15 @@ const getColAndOperands = <Model>(
   ...operands: Arg<Model>[]
 ): Arg<Model>[] => {
   switch (type) {
-    case 'noParam':
+    case "noParam":
       return [];
-    case 'single':
+    case "single":
       return [operands[0]];
-    case 'double':
+    case "double":
       return operands.slice(0, 2);
-    case 'triple':
+    case "triple":
       return operands.slice(0, 3);
-    case 'multiple':
+    case "multiple":
       return operands;
     default:
       return throwError.invalidOperandType();
@@ -320,117 +320,117 @@ const getColAndOperands = <Model>(
 const opGroups: OpGroup[] = [
   {
     set: NO_PRAM_FIELD_OP,
-    type: 'noParam',
-    attachMode: 'default',
+    type: "noParam",
+    attachMode: "default",
     zeroArgAllowed: true,
   },
   {
     set: CURRENT_DATE_FIELD_OP,
-    type: 'noParam',
-    attachMode: 'default',
+    type: "noParam",
+    attachMode: "default",
     zeroArgAllowed: true,
     callable: false,
   },
   {
     set: SINGLE_FIELD_OP,
-    type: 'single',
-    attachMode: 'default',
+    type: "single",
+    attachMode: "default",
   },
 
   {
     set: DATE_EXTRACT_FIELD_OP,
-    type: 'single',
-    attachMode: 'custom',
+    type: "single",
+    attachMode: "custom",
     attachCond: [DB_KEYWORDS.from],
     prefixAllowed: true,
     prefixRef: dateExtractFieldMapping,
   },
   {
     set: NOT_FIELD_OP,
-    type: 'single',
-    attachMode: 'custom',
+    type: "single",
+    attachMode: "custom",
     attachCond: [DB_KEYWORDS.not],
     callable: false,
   },
 
   {
     set: TRIM_FIELD_OP,
-    type: 'double',
-    attachMode: 'custom',
+    type: "double",
+    attachMode: "custom",
     attachCond: [DB_KEYWORDS.from],
   },
   {
     set: SYMBOL_FIELD_OP,
-    type: 'double',
-    attachMode: 'operatorInBetween',
+    type: "double",
+    attachMode: "operatorInBetween",
   },
   {
     set: DOUBLE_FIELD_OP,
-    type: 'double',
-    attachMode: 'default',
+    type: "double",
+    attachMode: "default",
   },
   {
     set: STR_FIELD_OP,
-    type: 'double',
-    attachMode: 'default',
+    type: "double",
+    attachMode: "default",
   },
   {
     set: STR_IN_FIELD_OP,
-    type: 'double',
-    attachMode: 'custom',
+    type: "double",
+    attachMode: "custom",
     attachCond: [DB_KEYWORDS.in],
   },
   {
     set: STR_IN_FIELD_OP,
-    type: 'double',
-    attachMode: 'custom',
+    type: "double",
+    attachMode: "custom",
     attachCond: [DB_KEYWORDS.in],
   },
   {
     set: STR_IN_FIELD_OP,
-    type: 'double',
-    attachMode: 'custom',
+    type: "double",
+    attachMode: "custom",
     attachCond: [DB_KEYWORDS.in],
   },
   {
     set: ARRAY_INDEX_OP,
-    type: 'double',
-    attachMode: 'arrayOperator',
+    type: "double",
+    attachMode: "arrayOperator",
   },
   {
     set: TRIPLE_FIELD_OP,
-    type: 'triple',
-    attachMode: 'default',
+    type: "triple",
+    attachMode: "default",
   },
   {
     set: SUBSTRING_FIELD_OP,
-    type: 'triple',
-    attachMode: 'custom',
+    type: "triple",
+    attachMode: "custom",
     attachCond: [DB_KEYWORDS.from, DB_KEYWORDS.for],
   },
   {
     set: ARRAY_SLICE_OP,
-    type: 'triple',
-    attachMode: 'arrayOperator',
+    type: "triple",
+    attachMode: "arrayOperator",
   },
   {
     set: MULTIPLE_FIELD_OP,
-    type: 'multiple',
-    attachMode: 'default',
+    type: "multiple",
+    attachMode: "default",
   },
   {
     set: CASE_FIELD_OP,
-    type: 'multiple',
-    attachMode: 'custom',
-    attachCond: [''],
+    type: "multiple",
+    attachMode: "custom",
+    attachCond: [""],
     callable: false,
     suffixAllowed: true,
-    suffixRef: { case: 'END' },
+    suffixRef: { case: "END" },
   },
   {
     set: CUSTOM_FIELD_OP,
-    type: 'multiple',
-    attachMode: 'custom',
+    type: "multiple",
+    attachMode: "custom",
   },
 ] as const;
 
@@ -496,7 +496,7 @@ class FieldFunction {
       suffix,
       prefix,
       callable = true,
-      attachMode = 'default',
+      attachMode = "default",
       conditions,
     } = options;
     fieldOptions = {
@@ -531,15 +531,15 @@ class FieldFunction {
       ref,
       op,
       rest,
-      ...colAndOperands,
+      ...colAndOperands
     );
     const callable = (options: CallableFieldParam) => {
       const { preparedValues, groupByFields, allowedFields } =
         getValidCallableFieldValues(
           options,
-          'allowedFields',
-          'groupByFields',
-          'preparedValues',
+          "allowedFields",
+          "groupByFields",
+          "preparedValues"
         );
 
       const value = prepareFields<Model>({
@@ -558,7 +558,7 @@ class FieldFunction {
         ctx: getInternalContext(),
       };
     };
-    attachMethodToSymbolRegistry(callable, 'fieldFn', op);
+    attachMethodToSymbolRegistry(callable, "fieldFn", op);
     return callable;
   }
 }

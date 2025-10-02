@@ -8,6 +8,7 @@ import { fromJsonStr, toJsonStr } from "./jsonFunctionHelepr";
 import { jsonPathFn } from "./jsonPathHelper";
 import { JPathBuilder } from "./jsonQueryBuilder";
 import { typeCastFn } from "./typeCastHelper";
+import { UserDefinedType } from "./userDefinedType";
 import { frameFn, windowFn } from "./windowFunctionHelper";
 
 type AggrKeys = keyof typeof aggregateFn;
@@ -24,6 +25,7 @@ interface GlobalFunction extends Func {
   cast: typeof typeCastFn;
   window: typeof windowFn;
   doBlock: typeof doHelper;
+  customDataType: UserDefinedType;
 }
 
 class GlobalFunction {
@@ -35,6 +37,7 @@ class GlobalFunction {
       this.cast = typeCastFn;
       this.window = windowFn;
       this.doBlock = doHelper;
+      this.customDataType = new UserDefinedType();
       this.#attachAggregateFunctions();
       this.#attachFrameFunctions();
       this.#attachFieldFunctions();
@@ -90,7 +93,6 @@ class GlobalFunction {
   raiseNotice(msg: string) {
     return `${DB_KEYWORDS.raiseNotice} '${msg}'`;
   }
-  createCustomType(name: string) {}
 }
 
 export const fn = new GlobalFunction();

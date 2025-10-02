@@ -9,18 +9,17 @@ import {
   precisionAndScaleParamTypeCast,
   precisionParamTypeCast,
   TypeCastKeys,
-} from '../constants/typeCast';
-import { Primitive } from '../globalTypes';
-import { CallableField, CallableFieldParam } from '../internalTypes';
-import { getInternalContext } from './ctxHelper';
-import { throwError } from './errorHelper';
-import { getFieldValue } from './fieldFunc';
+} from "../constants/typeCast";
+import { Primitive } from "../globalTypes";
+import { CallableField, CallableFieldParam } from "../internalTypes";
+import { getInternalContext } from "./ctxHelper";
+import { throwError } from "./errorHelper";
+import { getFieldValue } from "./fieldFunc";
 import {
-  attachArrayWith,
   attachMethodToSymbolRegistry,
   getValidCallableFieldValues,
-} from './helperFunction';
-import { isNullableValue, isValidArray } from './util';
+} from "./helperFunction";
+import { attachArrayWith, isNullableValue, isValidArray } from "./util";
 
 type ParamValue = {
   length: number;
@@ -35,7 +34,7 @@ type NoParamFunc = (value: Primitive | CallableField) => any;
 
 type ParamFunc = (
   value: Primitive | CallableField,
-  options?: Partial<ParamValue>,
+  options?: Partial<ParamValue>
 ) => any;
 
 type TypeCastFunc = {
@@ -43,9 +42,9 @@ type TypeCastFunc = {
 };
 
 const castOptionType: Record<keyof ParamValue, any> = {
-  length: 'number',
-  precision: 'number',
-  scale: 'number',
+  length: "number",
+  precision: "number",
+  scale: "number",
   field: allowedIntervalFields,
 };
 
@@ -59,17 +58,17 @@ const prepareCastObj = <T extends TypeCastKeys>(
       (pre as any)[key] = { value, paramAllowed };
       return pre;
     },
-    {} as Record<T, TypeCastRefVal>,
+    {} as Record<T, TypeCastRefVal>
   );
 };
 
 const getValidTypeValue = (
   paramAllowed: (keyof ParamValue)[],
-  castOptions?: ParamValue,
+  castOptions?: ParamValue
 ) => {
   castOptions = (castOptions || {}) as ParamValue;
   const getPrimitiveValidValue = (val: unknown, allowedType: string): string =>
-    typeof val === allowedType ? (val as string) : '';
+    typeof val === allowedType ? (val as string) : "";
   let wrapFieldParamWithBracket = true,
     i = 0;
   const arr: string[] = [];
@@ -83,15 +82,15 @@ const getValidTypeValue = (
       wrapFieldParamWithBracket = false;
       const precision =
         intervalFieldsWithPrecision.includes(val) &&
-        getPrimitiveValidValue(nextVal, castOptionType['precision']);
-      arr.push(`${val}${precision ? '(' + precision + ')' : ''}`);
+        getPrimitiveValidValue(nextVal, castOptionType["precision"]);
+      arr.push(`${val}${precision ? "(" + precision + ")" : ""}`);
       break;
     } else if (typeof val === allowedType) {
       arr.push(getPrimitiveValidValue(val, allowedType));
     }
   }
   const v = attachArrayWith.coma(arr);
-  if (!v) return '';
+  if (!v) return "";
   if (wrapFieldParamWithBracket) return `(${v})`;
   return ` ${v}`;
 };
@@ -106,10 +105,10 @@ class TypeCast {
       TypeCast.#instance = this;
       const methodKeyRef = {
         ...prepareCastObj(noParamTypeCast),
-        ...prepareCastObj(lengthParamTypeCast, 'length'),
-        ...prepareCastObj(precisionParamTypeCast, 'precision'),
-        ...prepareCastObj(precisionAndScaleParamTypeCast, 'precision', 'scale'),
-        ...prepareCastObj(fieldsParamTypeCast, 'field', 'precision'),
+        ...prepareCastObj(lengthParamTypeCast, "length"),
+        ...prepareCastObj(precisionParamTypeCast, "precision"),
+        ...prepareCastObj(precisionAndScaleParamTypeCast, "precision", "scale"),
+        ...prepareCastObj(fieldsParamTypeCast, "field", "precision"),
       };
       this.#attachMethods(methodKeyRef);
     }
@@ -123,14 +122,14 @@ class TypeCast {
         const { allowedFields, groupByFields, preparedValues } =
           getValidCallableFieldValues(
             options,
-            'allowedFields',
-            'groupByFields',
-            'preparedValues',
+            "allowedFields",
+            "groupByFields",
+            "preparedValues"
           );
 
         const prepareType = () => {
           const v = getValidTypeValue(paramAllowed, castOptions);
-          return attachArrayWith.customSep(['::', fnName, v], '');
+          return attachArrayWith.customSep(["::", fnName, v], "");
         };
         const type = prepareType();
         let col: string | null = null;
@@ -139,22 +138,22 @@ class TypeCast {
           value,
           preparedValues,
           groupByFields,
-          allowedFields,
+          allowedFields
         );
         if (isNullableValue(col)) {
-          return throwError.invalidColumnNameType('null', allowedFields);
+          return throwError.invalidColumnNameType("null", allowedFields);
         }
         col += type;
         return { col, alias: null, ctx: getInternalContext() };
       };
 
-      attachMethodToSymbolRegistry(callable, 'castFn', refVal.value);
+      attachMethodToSymbolRegistry(callable, "castFn", refVal.value);
       return callable;
     };
   }
 
   #attachMethods<T extends TypeCastKeys>(
-    methodKeyRef: Record<T, TypeCastRefVal>,
+    methodKeyRef: Record<T, TypeCastRefVal>
   ) {
     for (let key in methodKeyRef) {
       //@ts-ignore

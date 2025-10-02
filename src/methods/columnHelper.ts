@@ -1,15 +1,20 @@
-import { DB_KEYWORDS } from '../constants/dbkeywords';
+import { DB_KEYWORDS } from "../constants/dbkeywords";
 import {
   AllowedFields,
   FindQueryAttribute,
   FindQueryAttributes,
   GroupByFields,
   PreparedValues,
-} from '../internalTypes';
-import { throwError } from './errorHelper';
-import { getFieldValue } from './fieldFunc';
-import { attachArrayWith, fieldQuote } from './helperFunction';
-import { isColAliasNameArr, isNonEmptyString, isValidArray } from './util';
+} from "../internalTypes";
+import { throwError } from "./errorHelper";
+import { getFieldValue } from "./fieldFunc";
+import { fieldQuote } from "./helperFunction";
+import {
+  attachArrayWith,
+  isColAliasNameArr,
+  isNonEmptyString,
+  isValidArray,
+} from "./util";
 
 const getColNameAndAlias = (
   col: FindQueryAttribute,
@@ -17,7 +22,7 @@ const getColNameAndAlias = (
   isAggregateAllowed: boolean,
   preparedValues?: PreparedValues,
   groupByFields?: GroupByFields,
-  options?: { customAllowFields: string[] },
+  options?: { customAllowFields: string[] }
 ): {
   col: string;
   alias: string | null;
@@ -37,7 +42,7 @@ const getColNameAndAlias = (
         isFromCol: true,
         isAggregateAllowed,
         customAllowedFields: customAllowFields,
-      },
+      }
     );
   } else if (isNonEmptyString(col)) {
     column = fieldQuote(allowedFields, null, col, {
@@ -48,8 +53,8 @@ const getColNameAndAlias = (
     return { col: column, alias };
   }
   return throwError.invalidColumnNameType(
-    (col || 'null').toString(),
-    allowedFields,
+    (col || "null").toString(),
+    allowedFields
   );
 };
 
@@ -62,11 +67,11 @@ export class ColumnHelper {
       groupByFields?: GroupByFields;
       isAggregateAllowed?: boolean;
       customAllowFields?: string[];
-    },
+    }
   ) {
-    if (!isValidArray(columns)) return '*';
+    if (!isValidArray(columns)) return DB_KEYWORDS.wildcard;
     columns = columns.filter(Boolean);
-    if (columns.length < 1) return '*';
+    if (columns.length < 1) return DB_KEYWORDS.wildcard;
     const {
       groupByFields,
       preparedValues,
@@ -81,7 +86,7 @@ export class ColumnHelper {
           isAggregateAllowed,
           preparedValues,
           groupByFields,
-          { customAllowFields },
+          { customAllowFields }
         );
         if (alias === null) {
           return col;

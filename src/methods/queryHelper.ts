@@ -2,10 +2,10 @@ import {
   DB_KEYWORDS,
   DEFAULT_ALIAS,
   WHERE_KEYWORD,
-} from '../constants/dbkeywords';
-import { OP, OP_KEYS } from '../constants/operators';
-import { setOperation } from '../constants/setOperations';
-import { TableJoinType } from '../constants/tableJoin';
+} from "../constants/dbkeywords";
+import { OP, OP_KEYS } from "../constants/operators";
+import { setOperation } from "../constants/setOperations";
+import { TableJoinType } from "../constants/tableJoin";
 import {
   AliasSubType,
   AllowedFields,
@@ -21,23 +21,23 @@ import {
   SetQueryArrField,
   Subquery,
   SubqueryMultiColFlag,
-} from '../internalTypes';
-import { ColumnHelper } from './columnHelper';
-import { throwError } from './errorHelper';
-import { FieldHelper } from './fieldHelper';
-import { TableFilter } from './filterHelper';
+} from "../internalTypes";
+import { ColumnHelper } from "./columnHelper";
+import { throwError } from "./errorHelper";
+import { FieldHelper } from "./fieldHelper";
+import { TableFilter } from "./filterHelper";
 import {
-  attachArrayWith,
   fieldQuote,
   getJoinSubqueryFields,
   createNewObj,
   getSetSubqueryFields,
   repeatValInArrUpto,
-} from './helperFunction';
-import { OrderByQuery } from './orderBy';
-import { PaginationQuery } from './paginationQuery';
-import { TableJoin } from './tableJoin';
+} from "./helperFunction";
+import { OrderByQuery } from "./orderBy";
+import { PaginationQuery } from "./paginationQuery";
+import { TableJoin } from "./tableJoin";
 import {
+  attachArrayWith,
   isEmptyArray,
   isNonEmptyString,
   isNonNullableValue,
@@ -47,20 +47,20 @@ import {
   isValidSimpleModel,
   isValidSubQuery,
   isValidWhereQuery,
-} from './util';
+} from "./util";
 
 const prepareFinalFindQry = (
   selectQry: string,
   setQry?: string[],
   subQry?: string,
-  options?: { isMainQuery?: boolean; alias?: string; needWrapper?: boolean },
+  options?: { isMainQuery?: boolean; alias?: string; needWrapper?: boolean }
 ) => {
   const {
     isMainQuery = false,
     alias = DEFAULT_ALIAS,
     needWrapper: pNeedWrapper = true,
   } = options || {};
-  subQry = subQry ?? '';
+  subQry = subQry ?? "";
   if (!isValidArray(setQry)) {
     const q = attachArrayWith.space([selectQry, subQry]);
     return isMainQuery ? q : `(${q})`;
@@ -68,18 +68,18 @@ const prepareFinalFindQry = (
   const totalSetQueries = setQry.length;
   const needsWrapper = pNeedWrapper && (subQry || totalSetQueries > 1);
   const totalBrackets = needsWrapper ? totalSetQueries : totalSetQueries - 1;
-  const selectUpdatedQries = repeatValInArrUpto<string>('(', totalBrackets);
+  const selectUpdatedQries = repeatValInArrUpto<string>("(", totalBrackets);
   selectUpdatedQries.push(selectQry);
-  if (subQry) selectUpdatedQries.push(' ', subQry);
+  if (subQry) selectUpdatedQries.push(" ", subQry);
   for (let i = 0; i < totalSetQueries; i++) {
-    selectUpdatedQries.push(' ', setQry[i], ')');
+    selectUpdatedQries.push(" ", setQry[i], ")");
   }
   if (!needsWrapper) selectUpdatedQries.pop();
   const finalSubquery = attachArrayWith.noSpace(selectUpdatedQries, false);
   const rawQueries = needsWrapper
     ? [
         DB_KEYWORDS.select,
-        '*',
+        DB_KEYWORDS.wildcard,
         DB_KEYWORDS.from,
         finalSubquery,
         DB_KEYWORDS.as,
@@ -91,7 +91,7 @@ const prepareFinalFindQry = (
 };
 
 const getRestQueryFrDerivedModel = <Model>(
-  derivedModel: DerivedModel<Model>,
+  derivedModel: DerivedModel<Model>
 ) => {
   if (isNullableValue(derivedModel)) {
     return throwError.invalidModelType();
@@ -116,14 +116,14 @@ const prepareCols = (
   isExistsFilter: boolean,
   tableColumns: AllowedFields,
   col?: any,
-  cols?: any[],
+  cols?: any[]
 ) => {
-  const columns = isExistsFilter ? ['1'] : col ? [col] : cols ? [...cols] : [];
+  const columns = isExistsFilter ? ["1"] : col ? [col] : cols ? [...cols] : [];
   tableColumns = new Set(tableColumns);
   if (isExistsFilter) {
-    tableColumns.add('1');
+    tableColumns.add("1");
   }
-  const customAllowFields = isExistsFilter ? ['1'] : [];
+  const customAllowFields = isExistsFilter ? ["1"] : [];
   return { columns, tableColumns, customAllowFields };
 };
 
@@ -138,7 +138,7 @@ export class QueryHelper {
       useOnlyRefAllowedFields?: boolean;
       derivedModelRef?: Model;
       needWrapperForSetQry?: boolean;
-    },
+    }
   ) {
     if (isNonNullableValue((qry as any).model)) {
       const { model, ...rest } = qry as any;
@@ -174,7 +174,7 @@ export class QueryHelper {
       groupByFields,
       preparedValues,
       selectQury,
-      { derivedModelRef },
+      { derivedModelRef }
     );
     const subQry = QueryHelper.#prepareSubquery(
       tableName,
@@ -183,12 +183,12 @@ export class QueryHelper {
       preparedValues,
       rest,
       join,
-      orderBy,
+      orderBy
     );
     const setQry = QueryHelper.#prepareSetQuery(
       preparedValues,
       groupByFields,
-      set,
+      set
     );
     const query = prepareFinalFindQry(selectQry, setQry, subQry, {
       isMainQuery: true,
@@ -199,7 +199,7 @@ export class QueryHelper {
 
   static otherModelSubqueryBuilder<
     M extends SubqueryMultiColFlag,
-    T extends InOperationSubQuery<Model, 'WhereNotReq', M>,
+    T extends InOperationSubQuery<Model, "WhereNotReq", M>,
     Model,
   >(
     existFilterKey: string,
@@ -210,7 +210,7 @@ export class QueryHelper {
       isExistsFilter?: boolean;
       refAllowedFields?: AllowedFields;
       isColumnReq?: boolean;
-    },
+    }
   ) {
     const {
       isExistsFilter = true,
@@ -249,7 +249,7 @@ export class QueryHelper {
       isExistsFilter,
       model.tableColumns,
       col,
-      cols,
+      cols
     );
     const updatedAlias =
       (!isValidSimpleModel(m) && (alias || DEFAULT_ALIAS)) || alias;
@@ -268,7 +268,7 @@ export class QueryHelper {
       groupByFields,
       preparedValues,
       selectQuery,
-      { customAllowFields },
+      { customAllowFields }
     );
     const subquery = QueryHelper.#prepareSubquery(
       tableName,
@@ -276,13 +276,13 @@ export class QueryHelper {
       groupByFields,
       preparedValues,
       rest,
-      join,
+      join
     );
     const setQry = QueryHelper.#prepareSetQuery(
       preparedValues,
       groupByFields,
       set,
-      { isExistsFilter },
+      { isExistsFilter }
     );
     const operator = isExistsFilter
       ? OP[existFilterKey as OP_KEYS]
@@ -300,11 +300,11 @@ export class QueryHelper {
     groupByFields: GroupByFields,
     preparedValues: PreparedValues,
     selectQuery: SelectQuery<Model>,
-    options?: { customAllowFields?: string[]; derivedModelRef?: Model },
+    options?: { customAllowFields?: string[]; derivedModelRef?: Model }
   ) {
     const { customAllowFields = [], derivedModelRef } = options || {};
     const { isDistinct, columns, alias, derivedModel } = selectQuery;
-    const distinctMaybe = isDistinct ? `${DB_KEYWORDS.distinct}` : '';
+    const distinctMaybe = isDistinct ? `${DB_KEYWORDS.distinct}` : "";
     const colStr = ColumnHelper.getSelectColumns(allowedFields, columns, {
       preparedValues,
       groupByFields,
@@ -315,7 +315,7 @@ export class QueryHelper {
       preparedValues,
       allowedFields,
       groupByFields,
-      { alias, derivedModel, derivedModelRef },
+      { alias, derivedModel, derivedModelRef }
     );
     const queries = [
       DB_KEYWORDS.select,
@@ -332,7 +332,7 @@ export class QueryHelper {
     preparedValues: PreparedValues,
     groupByFields: GroupByFields,
     setQry?: SetQueryArrField<Model>[],
-    options?: { isExistsFilter?: boolean },
+    options?: { isExistsFilter?: boolean }
   ): string[] {
     if (
       isNullableValue(setQry) ||
@@ -349,8 +349,8 @@ export class QueryHelper {
         qry,
         preparedValues,
         groupByFields,
-        options,
-      ),
+        options
+      )
     );
     return setQueries;
   }
@@ -358,7 +358,7 @@ export class QueryHelper {
     setQry: SetQueryArrField<Model>,
     preparedValues: PreparedValues,
     groupByFields: GroupByFields,
-    options?: { isExistsFilter?: boolean },
+    options?: { isExistsFilter?: boolean }
   ) => {
     if (!setQry.type || !isValidDerivedModel(setQry.model)) {
       return throwError.invalidSetQueryType(true);
@@ -374,7 +374,7 @@ export class QueryHelper {
       isExistsFilter,
       model.tableColumns,
       null,
-      cols,
+      cols
     );
     const allowedFields = FieldHelper.getAllowedFields(tableColumns, {
       alias,
@@ -390,7 +390,7 @@ export class QueryHelper {
       groupByFields,
       preparedValues,
       selectQ,
-      { customAllowFields },
+      { customAllowFields }
     );
     const subQry = QueryHelper.#prepareSubquery(
       tableName,
@@ -399,15 +399,15 @@ export class QueryHelper {
       preparedValues,
       rest,
       join,
-      orderBy,
+      orderBy
     );
     const setSubqry = QueryHelper.#prepareSetQuery(
       preparedValues,
       groupByFields,
-      set,
+      set
     );
     queries.push(
-      prepareFinalFindQry(selectQry, setSubqry, subQry, { isMainQuery: true }),
+      prepareFinalFindQry(selectQry, setSubqry, subQry, { isMainQuery: true })
     );
     return attachArrayWith.space(queries);
   };
@@ -427,17 +427,17 @@ export class QueryHelper {
     allowedFields: AllowedFields,
     groupByFields: GroupByFields,
     preparedValues: PreparedValues,
-    groupBy?: string[],
+    groupBy?: string[]
   ) {
     groupByFields.clear();
-    if (!isValidArray(groupBy)) return '';
+    if (!isValidArray(groupBy)) return "";
     const groupStatements: string[] = [DB_KEYWORDS.groupBy];
     const qry = attachArrayWith.coma(
       groupBy.map((key) => {
         const validKey = fieldQuote(allowedFields, preparedValues, key);
         groupByFields.add(validKey);
         return validKey;
-      }),
+      })
     );
     groupStatements.push(qry);
     return attachArrayWith.space(groupStatements);
@@ -450,38 +450,38 @@ export class QueryHelper {
     preparedValues: PreparedValues,
     subQuery: Subquery<Model>,
     join: Record<TableJoinType, JoinQuery<TableJoinType, Model>>,
-    orderBy?: ORDER_BY<Model>,
+    orderBy?: ORDER_BY<Model>
   ) {
     const { where, groupBy, limit, offset, having } = subQuery || {};
     const whereStatement = TableFilter.prepareFilterStatement(
       allowedFields,
       groupByFields,
       preparedValues,
-      where,
+      where
     );
     const limitStr = PaginationQuery.preparePaginationStatement(
       preparedValues,
       limit,
-      offset,
+      offset
     );
     const joinStr = TableJoin.prepareTableJoin(
       tableName,
       allowedFields,
       preparedValues,
       groupByFields,
-      join,
+      join
     );
     const groupByStr = QueryHelper.#prepareGroupByQuery(
       allowedFields,
       groupByFields,
       preparedValues,
-      groupBy,
+      groupBy
     );
     const orderStr = OrderByQuery.prepareOrderByQuery(
       allowedFields,
       preparedValues,
       groupByFields,
-      orderBy,
+      orderBy
     );
     const havingStatement = TableFilter.prepareFilterStatement(
       allowedFields,
@@ -490,7 +490,7 @@ export class QueryHelper {
       having,
       {
         isHavingFilter: true,
-      },
+      }
     );
     const finalSubQry = QueryHelper.#prepareSubQry({
       whereQry: whereStatement,
@@ -512,10 +512,10 @@ export class QueryHelper {
       alias?: AliasSubType;
       derivedModel?: DerivedModel<Model>;
       derivedModelRef?: Model;
-    },
+    }
   ): string {
     const { alias, derivedModel, derivedModelRef } = options || {};
-    const aliasStr = isNonEmptyString(alias) ? alias : '';
+    const aliasStr = isNonEmptyString(alias) ? alias : "";
     if (!isValidDerivedModel(derivedModel)) {
       return getTableWithAliasName(tableName, aliasStr);
     }
@@ -535,7 +535,7 @@ export class QueryHelper {
         useOnlyRefAllowedFields: true,
         derivedModelRef: model,
         needWrapperForSetQry: false,
-      },
+      }
     );
     const findAllQuery = `(${query})`;
     const queries = [findAllQuery];

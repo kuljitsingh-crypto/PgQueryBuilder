@@ -1,7 +1,7 @@
 import { DB_KEYWORDS } from "../constants/dbkeywords";
 import { TABLE_JOIN } from "../constants/tableJoin";
 import { AllowedFields } from "../internalTypes";
-import { attachArrayWith } from "./helperFunction";
+import { attachArrayWith } from "./util";
 
 function throwConstructorNotAvailable(): never {
   throw new Error("This class cannot be instantiated!");

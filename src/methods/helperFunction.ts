@@ -1,8 +1,8 @@
-import { PgDataType } from '../constants/dataTypes';
-import { OP } from '../constants/operators';
-import { setOperation } from '../constants/setOperations';
-import { TABLE_JOIN, TableJoinType } from '../constants/tableJoin';
-import { Primitive } from '../globalTypes';
+import { PgDataType } from "../constants/dataTypes";
+import { OP } from "../constants/operators";
+import { setOperation } from "../constants/setOperations";
+import { TABLE_JOIN, TableJoinType } from "../constants/tableJoin";
+import { Primitive } from "../globalTypes";
 import {
   AllowedFields,
   CallableField,
@@ -13,11 +13,12 @@ import {
   PreparedValues,
   SetQueryArrField,
   Subquery,
-} from '../internalTypes';
-import { isValidInternalContext } from './ctxHelper';
-import { throwError } from './errorHelper';
-import { symbolFuncRegister } from './symbolHelper';
+} from "../internalTypes";
+import { isValidInternalContext } from "./ctxHelper";
+import { throwError } from "./errorHelper";
+import { symbolFuncRegister } from "./symbolHelper";
 import {
+  attachArrayWith,
   filterOutValidDbData,
   isNonEmptyString,
   isNullableValue,
@@ -33,7 +34,7 @@ import {
   isValidObject,
   isValidPreparedValues,
   isValidSymbol,
-} from './util';
+} from "./util";
 
 type FieldQuoteReturn<T extends boolean> = T extends false
   ? string
@@ -60,42 +61,6 @@ const callableFieldValidator: Record<
   customAllowedFields: isValidCustomALlowedFields,
 };
 
-const attachArrayWithSep = (
-  array: Array<Primitive>,
-  sep: string,
-  shouldTrimStr?: boolean,
-) => array.filter(filterOutValidDbData(shouldTrimStr)).join(sep);
-
-const attachArrayWithDotSep = (
-  array: Array<Primitive>,
-  shouldTrimStr?: boolean,
-) => attachArrayWithSep(array, '.', shouldTrimStr);
-
-const attachArrayWithSpaceSep = (
-  array: Array<Primitive>,
-  shouldTrimStr?: boolean,
-) => attachArrayWithSep(array, ' ', shouldTrimStr);
-
-const attachArrayWithNoSpaceSep = (
-  array: Array<Primitive>,
-  shouldTrimStr?: boolean,
-) => attachArrayWithSep(array, '', shouldTrimStr);
-
-const attachArrayWithComaSep = (
-  array: Array<Primitive>,
-  shouldTrimStr?: boolean,
-) => attachArrayWithSep(array, ',', shouldTrimStr);
-
-const attachArrayWithAndSep = (
-  array: Array<Primitive>,
-  shouldTrimStr?: boolean,
-) => attachArrayWithSep(array, ` ${OP.$and} `, shouldTrimStr);
-
-const attachArrayWithComaAndSpaceSep = (
-  array: Array<Primitive>,
-  shouldTrimStr?: boolean,
-) => attachArrayWithSep(array, ', ', shouldTrimStr);
-
 const isFieldAllowed =
   (allowed: AllowedFields, customAllowFields: string[]) => (field: string) =>
     allowed.has(field) || customAllowFields.includes(field);
@@ -105,13 +70,13 @@ const checkForJsonField =
     allowed: AllowedFields,
     preparedValues: PreparedValues | null,
     customAllowFields: string[],
-    asJson: boolean,
+    asJson: boolean
   ) =>
   (field: string) => {
     if (isNullableValue(preparedValues)) {
       return null;
     }
-    const fieldArr = field.split('.');
+    const fieldArr = field.split(".");
     const simpleField = fieldArr[0];
     const aliasField = `${fieldArr[0]}.${fieldArr[1]}`;
     if (isFieldAllowed(allowed, customAllowFields)(simpleField)) {
@@ -130,7 +95,7 @@ const validateField = (
     customAllowFields: string[];
     metadata?: FieldMetadata;
     asJson?: boolean;
-  },
+  }
 ) => {
   const {
     customAllowFields = [],
@@ -146,7 +111,7 @@ const validateField = (
     allowed,
     preparedValues,
     customAllowFields,
-    asJson,
+    asJson
   )(field);
   if (isNonEmptyString(jsonField)) {
     metadata.isJSONField = true;
@@ -159,12 +124,12 @@ const callableCol = (col: CallableField, options: CallableFieldParam) => {
   const validOptions = Object.entries(options || {}).reduce(
     (pre, acc) => {
       const [key, val] = acc;
-      if (typeof val !== 'undefined') {
+      if (typeof val !== "undefined") {
         pre[key] = val;
       }
       return pre;
     },
-    {} as Record<string, ValidOption>,
+    {} as Record<string, ValidOption>
   );
   return col(validOptions);
 };
@@ -182,16 +147,16 @@ export function prepareFieldForJson(
   fieldArr: string[],
   preparedValues: PreparedValues,
   startIndex: number,
-  asJson: boolean,
+  asJson: boolean
 ) {
   const fieldName = attachArrayWith.dot(fieldArr.slice(0, startIndex)); //
   const placeholders = fieldArr
     .slice(startIndex)
     .map((val) =>
-      getPreparedValues(preparedValues, val, { returnNumAsItIs: true }),
+      getPreparedValues(preparedValues, val, { returnNumAsItIs: true })
     );
   const lastIndex = placeholders.length - 1;
-  const lastFieldKey = asJson ? '->' : '->>';
+  const lastFieldKey = asJson ? "->" : "->>";
   if (placeholders.length < 2) {
     return attachArrayWith.noSpace([
       fieldName,
@@ -201,11 +166,11 @@ export function prepareFieldForJson(
   }
   const middleFields = attachArrayWith.customSep(
     placeholders.slice(0, lastIndex),
-    '->',
+    "->"
   );
   return attachArrayWith.noSpace([
     fieldName,
-    '->',
+    "->",
     middleFields,
     lastFieldKey,
     placeholders[lastIndex],
@@ -218,14 +183,14 @@ export const createPlaceholder = (index: number, type?: string) => {
 const prepareVal = (val: Primitive | Primitive[]) =>
   isValidArray(val)
     ? val
-    : digitRegex.test((val as any) || '')
+    : digitRegex.test((val as any) || "")
       ? Number(val)
       : val;
 
 export const getPreparedValues = <T extends boolean = false>(
   preparedValues: PreparedValues,
   value: Primitive | Primitive[],
-  options?: { type?: string; returnNumAsItIs?: T },
+  options?: { type?: string; returnNumAsItIs?: T }
 ): T extends true ? string | number : string => {
   const { type, returnNumAsItIs = false } = options || {};
   const val = prepareVal(value);
@@ -240,7 +205,7 @@ export const getPreparedValues = <T extends boolean = false>(
 
 export const simpleFieldValidate = (
   field: string | null,
-  customAllowFields: string[],
+  customAllowFields: string[]
 ) => {
   if (!isNonEmptyString(field)) {
     return throwError.invalidColType();
@@ -266,7 +231,7 @@ export const quote = (str: string) => `${String(str).replace(/"/g, '""')}`;
 
 export const dynamicFieldQuote = (
   field: string,
-  customAllowFields: string[] = [],
+  customAllowFields: string[] = []
 ) => {
   field = simpleFieldValidate(field, customAllowFields);
   return quote(field);
@@ -281,7 +246,7 @@ export const fieldQuote = <T extends boolean = false>(
     customAllowFields?: string[];
     metadata?: FieldMetadata;
     asJson?: boolean;
-  },
+  }
 ): FieldQuoteReturn<T> => {
   const {
     isNullColAllowed = false,
@@ -312,12 +277,12 @@ export const getJoinSubqueryFields = <Model>(subQuery: Subquery<Model>) => {
       }
       return pre;
     },
-    {} as Record<TableJoinType, JoinQuery<TableJoinType, Model>>,
+    {} as Record<TableJoinType, JoinQuery<TableJoinType, Model>>
   );
 };
 
 export const getSetSubqueryFields = <Model>(
-  subQuery: Subquery<Model>,
+  subQuery: Subquery<Model>
 ): SetQueryArrField<Model>[] => {
   return Object.entries(subQuery || {}).reduce((pre, acc) => {
     const [key, value] = acc;
@@ -350,7 +315,7 @@ export const getValidCallableFieldValues = <T extends keyof CallableFieldParam>(
 
 export const validCallableColCtx = (
   col: CallableField,
-  options: CallableFieldParam,
+  options: CallableFieldParam
 ) => {
   const { ctx, ...rest } = callableCol(col, options);
   if (!isValidInternalContext(ctx)) {
@@ -363,26 +328,26 @@ export const prepareMultipleValues = <T extends string>(
   preparedValues: PreparedValues,
   arg: {
     [key in T]: {
-      type: 'string' | 'number' | 'primitive' | 'boolean';
+      type: "string" | "number" | "primitive" | "boolean";
       val: unknown;
     };
-  },
+  }
 ): Record<T, string> => {
   const finalObject = {} as Record<T, string>;
   return Object.entries(arg).reduce((acc, [key, value]) => {
     let isValidValue = false;
     const { type, val } = value as {
-      type: 'string' | 'number' | 'primitive' | 'boolean';
+      type: "string" | "number" | "primitive" | "boolean";
       val: Primitive;
     };
-    (acc as any)[key] = '';
-    if (type === 'string') {
+    (acc as any)[key] = "";
+    if (type === "string") {
       isValidValue = isNonEmptyString(val);
-    } else if (type === 'number') {
+    } else if (type === "number") {
       isValidValue = isValidNumber(val);
-    } else if (type === 'boolean') {
+    } else if (type === "boolean") {
       isValidValue = isValidBoolean(val);
-    } else if (type === 'primitive') {
+    } else if (type === "primitive") {
       isValidValue = isPrimitiveValue(val);
     }
     if (isValidValue) {
@@ -412,7 +377,7 @@ export const validateColumn =
       isNullColAllowed?: false | undefined;
       customAllowFields?: string[];
       isAggregateAllowed?: boolean | undefined;
-    },
+    }
   ) =>
   (options: {
     preparedValues: PreparedValues;
@@ -442,7 +407,7 @@ export const validateColumn =
       return fieldQuote(allowedFields, preparedValues, col, rest);
     }
     return throwError.invalidColumnNameRegexType(
-      ((col as any) || 'null').toString(),
+      ((col as any) || "null").toString()
     );
   };
 
@@ -454,7 +419,7 @@ export const attachMethodToSymbolRegistry = (
     const symbol = createSymbolMethodRef(
       method,
       ...keys,
-      Date.now().toString(),
+      Date.now().toString()
     );
     return symbol;
   };
@@ -471,11 +436,11 @@ export const isIntegerVal = (val: unknown): val is number => {
 export const covertJSDataToSQLData = (data: unknown): string => {
   if (data === null) {
     return PgDataType.null;
-  } else if (typeof data === 'boolean') {
+  } else if (typeof data === "boolean") {
     return PgDataType.boolean;
-  } else if (typeof data === 'string') {
+  } else if (typeof data === "string") {
     return PgDataType.text;
-  } else if (typeof data === 'bigint') {
+  } else if (typeof data === "bigint") {
     return PgDataType.bigInt;
   } else if (isFloatVal(data)) {
     return PgDataType.double;
@@ -489,27 +454,16 @@ export const covertJSDataToSQLData = (data: unknown): string => {
 
 export const prepareSQLDataType = (data: Primitive) =>
   `::${covertJSDataToSQLData(data)}`;
-//===================================== Object wrapped functions =======================//
-
-export const attachArrayWith = {
-  space: attachArrayWithSpaceSep,
-  coma: attachArrayWithComaSep,
-  and: attachArrayWithAndSep,
-  dot: attachArrayWithDotSep,
-  noSpace: attachArrayWithNoSpaceSep,
-  comaAndSpace: attachArrayWithComaAndSpaceSep,
-  customSep: attachArrayWithSep,
-};
 
 //==================================== Field helper depend on object ============================//
 export const covertStrArrayToStr = (
   value: string | string[],
-  options?: { by: keyof typeof attachArrayWith; sep?: string },
+  options?: { by: keyof typeof attachArrayWith; sep?: string }
 ): string => {
-  const { by = 'coma', sep } = options || {};
+  const { by = "coma", sep } = options || {};
   return isValidArray<string>(value)
-    ? by === 'customSep'
-      ? attachArrayWith.customSep(value, sep ?? ',')
+    ? by === "customSep"
+      ? attachArrayWith.customSep(value, sep ?? ",")
       : attachArrayWith[by](value)
     : value;
 };
@@ -520,7 +474,7 @@ export const createNewObj = (...objs: object[]) => {
 
 export const repeatValInArrUpto = <T extends Primitive>(
   ch: T,
-  upto: number,
+  upto: number
 ) => {
   const arr: T[] = [];
   for (let i = 0; i < upto; i++) {

@@ -1,5 +1,6 @@
-import { WHERE_KEYWORD } from '../constants/dbkeywords';
-import { Primitive } from '../globalTypes';
+import { DB_KEYWORDS, WHERE_KEYWORD } from "../constants/dbkeywords";
+import { OP } from "../constants/operators";
+import { Primitive } from "../globalTypes";
 import {
   AllowedFields,
   CallableField,
@@ -12,44 +13,94 @@ import {
   PreparedValues,
   SubqueryMultiColFlag,
   WhereClause,
-} from '../internalTypes';
-import { symbolFuncRegister } from './symbolHelper';
+} from "../internalTypes";
+import { symbolFuncRegister } from "./symbolHelper";
 
 const allowedWhereKeyWOrds = new Set([
-  '$and',
-  '$or',
-  '$exists',
-  '$notExists',
-  '$matches',
+  "$and",
+  "$or",
+  "$exists",
+  "$notExists",
+  "$matches",
 ]);
 
+const attachArrayWithSep = (
+  array: Array<Primitive>,
+  sep: string,
+  shouldTrimStr?: boolean
+) => array.filter(filterOutValidDbData(shouldTrimStr)).join(sep);
+
+const attachArrayWithDotSep = (
+  array: Array<Primitive>,
+  shouldTrimStr?: boolean
+) => attachArrayWithSep(array, ".", shouldTrimStr);
+
+const attachArrayWithSpaceSep = (
+  array: Array<Primitive>,
+  shouldTrimStr?: boolean
+) => attachArrayWithSep(array, " ", shouldTrimStr);
+
+const attachArrayWithNoSpaceSep = (
+  array: Array<Primitive>,
+  shouldTrimStr?: boolean
+) => attachArrayWithSep(array, "", shouldTrimStr);
+
+const attachArrayWithComaSep = (
+  array: Array<Primitive>,
+  shouldTrimStr?: boolean
+) => attachArrayWithSep(array, ",", shouldTrimStr);
+
+const attachArrayWithAndSep = (
+  array: Array<Primitive>,
+  shouldTrimStr?: boolean
+) => attachArrayWithSep(array, ` ${OP.$and} `, shouldTrimStr);
+
+const attachArrayWithComaAndSpaceSep = (
+  array: Array<Primitive>,
+  shouldTrimStr?: boolean
+) => attachArrayWithSep(array, ", ", shouldTrimStr);
+
+//===================================== Object wrapped functions =======================//
+
+export const attachArrayWith = {
+  space: attachArrayWithSpaceSep,
+  coma: attachArrayWithComaSep,
+  and: attachArrayWithAndSep,
+  dot: attachArrayWithDotSep,
+  noSpace: attachArrayWithNoSpaceSep,
+  comaAndSpace: attachArrayWithComaAndSpaceSep,
+  customSep: attachArrayWithSep,
+};
+
+//===================================== Object wrapped functions =======================//
+
 export function isValidGroupByFieldsFields(
-  groupByFields: unknown,
+  groupByFields: unknown
 ): groupByFields is GroupByFields {
   return isValidSetObj<string>(groupByFields);
 }
 
 export function isValidPreparedValues(
-  preparedValues: unknown,
+  preparedValues: unknown
 ): preparedValues is PreparedValues {
   return (
     isValidObject(preparedValues) &&
-    preparedValues.hasOwnProperty('index') &&
-    typeof (preparedValues as any).index === 'number' &&
-    preparedValues.hasOwnProperty('values') &&
+    preparedValues.hasOwnProperty("index") &&
+    typeof (preparedValues as any).index === "number" &&
+    preparedValues.hasOwnProperty("values") &&
     isValidArray((preparedValues as any).values, -1)
   );
 }
 
 export function isValidAggregateValue(value: unknown): value is boolean {
-  return typeof value === 'boolean';
+  return typeof value === "boolean";
 }
 export function isValidCustomALlowedFields(value: unknown): boolean {
   return isValidArray(value);
 }
 
 export function isValidAllowedFields(
-  allowedFields: unknown,
+  allowedFields: unknown
 ): allowedFields is AllowedFields {
   return isValidSetObj<string>(allowedFields);
 }
@@ -63,19 +114,19 @@ export function isEmptyArray<T>(arr: unknown): arr is Array<T> {
   return isValidArray(arr, -1) && arr.length === 0;
 }
 export function isValidFunction(func: unknown): func is Function {
-  return typeof func === 'function' && func.constructor === Function;
+  return typeof func === "function" && func.constructor === Function;
 }
 
 export function isNonEmptyString(str: unknown): str is string {
-  return typeof str === 'string' && str.trim().length > 0;
+  return typeof str === "string" && str.trim().length > 0;
 }
 
 export function isValidObject(obj: unknown): obj is object {
-  return typeof obj === 'object' && obj !== null && obj.constructor === Object;
+  return typeof obj === "object" && obj !== null && obj.constructor === Object;
 }
 
 export function isValidSetObj<T>(obj: unknown): obj is Set<T> {
-  return typeof obj === 'object' && obj !== null && obj.constructor === Set;
+  return typeof obj === "object" && obj !== null && obj.constructor === Set;
 }
 
 export const isNonNullableValue = <T>(v: T): v is NonNullable<T> =>
@@ -84,31 +135,31 @@ export const isNonNullableValue = <T>(v: T): v is NonNullable<T> =>
 export const isNullableValue = (v: unknown): v is Nullable => v == null;
 export const isPrimitiveValue = (value: unknown): value is Primitive => {
   return (
-    typeof value === 'string' ||
-    typeof value === 'number' ||
-    typeof value === 'boolean' ||
+    typeof value === "string" ||
+    typeof value === "number" ||
+    typeof value === "boolean" ||
     value === null
   );
 };
 
 export const isNotNullPrimitiveValue = (
-  value: unknown,
+  value: unknown
 ): value is NonNullPrimitive => {
   return (
-    typeof value === 'string' ||
-    typeof value === 'number' ||
-    typeof value === 'boolean'
+    typeof value === "string" ||
+    typeof value === "number" ||
+    typeof value === "boolean"
   );
 };
 
 export const isValidNumber = (value: unknown): value is number =>
-  typeof value === 'number';
+  typeof value === "number";
 
 export const isValidBoolean = (value: unknown): value is boolean =>
-  typeof value === 'boolean';
+  typeof value === "boolean";
 
 export const isValidSymbol = (value: unknown): value is Symbol =>
-  typeof value === 'symbol' && value.constructor === Symbol;
+  typeof value === "symbol" && value.constructor === Symbol;
 
 export const isValidSimpleModel = <T>(model: any): model is T => {
   if (!isValidFunction(model)) {
@@ -126,7 +177,7 @@ export const isValidSimpleModel = <T>(model: any): model is T => {
 export const isValidColumn = (
   column: unknown,
   arrayAllowedUptoLvl = 0,
-  lvl = 0,
+  lvl = 0
 ): boolean => {
   const isColumn = isNonEmptyString(column) || isValidFunction(column);
   const isArrayAllowed = lvl <= arrayAllowedUptoLvl;
@@ -140,8 +191,8 @@ export const isValidColumn = (
 };
 
 export const isValidSubQuery = <Model, W extends SubqueryMultiColFlag>(
-  subQuery: unknown,
-): subQuery is InOperationSubQuery<Model, 'WhereNotReq', W> => {
+  subQuery: unknown
+): subQuery is InOperationSubQuery<Model, "WhereNotReq", W> => {
   if (!isValidObject(subQuery)) {
     return false;
   }
@@ -159,10 +210,10 @@ export const isValidSubQuery = <Model, W extends SubqueryMultiColFlag>(
 
 export const isValidCaseQuery = <Model>(
   query: unknown,
-  options: { treatSimpleObjAsWhereSubQry: boolean },
+  options: { treatSimpleObjAsWhereSubQry: boolean }
 ): query is CaseSubquery<Model> => {
   const q = query as any;
-  if (typeof q !== 'object' || q === null) return false;
+  if (typeof q !== "object" || q === null) return false;
   const { treatSimpleObjAsWhereSubQry } = options || {};
   const isValidResultQry = (val: unknown) =>
     isPrimitiveValue(val) ||
@@ -177,7 +228,7 @@ export const isValidCaseQuery = <Model>(
 
 const isValidWhereSubQuery = (
   value: object,
-  treatSimpleObjAsWhereSubQry: boolean,
+  treatSimpleObjAsWhereSubQry: boolean
 ) => {
   const isValidObjValue = (val: unknown) =>
     isNonEmptyObject(val) || isCallableColumn(val);
@@ -202,7 +253,7 @@ const isValidWhereSubQuery = (
 export const isValidWhereQuery = <Model>(
   key: string | null,
   value: unknown,
-  options: { treatSimpleObjAsWhereSubQry: boolean },
+  options: { treatSimpleObjAsWhereSubQry: boolean }
 ): value is WhereClause<Model> => {
   if (!isValidObject(value)) return false;
   const { treatSimpleObjAsWhereSubQry = true } = options || {};
@@ -215,7 +266,7 @@ export const isValidWhereQuery = <Model>(
 };
 
 export function isValidDerivedModel<Model>(
-  derivedModel: unknown,
+  derivedModel: unknown
 ): derivedModel is DerivedModel<Model> {
   if (isValidSimpleModel(derivedModel)) {
     return true;
@@ -233,7 +284,7 @@ export const isNonEmptyObject = (obj: unknown): obj is object =>
   isValidObject(obj) && Object.keys(obj).length > 0;
 
 export const isCallableColumn = (col: unknown): col is CallableField => {
-  return typeof col === 'function' && col.length === 1;
+  return typeof col === "function" && col.length === 1;
 };
 
 export const filterOutValidDbData =
@@ -242,12 +293,12 @@ export const filterOutValidDbData =
     const trimmedStrLength = shouldTrimStr ? 0 : -1;
     if (
       a === null ||
-      typeof a === 'boolean' ||
-      typeof a === 'number' ||
+      typeof a === "boolean" ||
+      typeof a === "number" ||
       isValidArray(a)
     ) {
       return true;
-    } else if (typeof a == 'string' && a.trim().length > trimmedStrLength) {
+    } else if (typeof a == "string" && a.trim().length > trimmedStrLength) {
       return true;
     }
     return false;
@@ -258,14 +309,37 @@ export const ensureArray = <T>(val: T | T[]): T[] => {
 };
 
 export const isColAliasNameArr = (
-  col: unknown,
+  col: unknown
 ): col is [string | CallableField, string | null] => {
   if (!isValidArray(col)) return false;
   if (col.filter(Boolean).length !== 2) return false;
   return true;
 };
 
+export const isEnumDataType = (val: unknown): boolean => {
+  return isNonEmptyString(val) && val.startsWith(DB_KEYWORDS.enum);
+};
+
 export const range = (start: number, end: number) => {
   const limit = end - start + 1;
   return Array.from(new Array(limit), (_, i) => i + start);
+};
+
+export const prepareEnumField = (name: string) => {
+  return `${name.trim().toLowerCase()}_${DB_KEYWORDS.enum.toLowerCase()}`;
+};
+
+export const isUndefined = (val: unknown): val is undefined => {
+  return typeof val === "undefined";
+};
+
+export const buildCreateQry = (name: string, type: string) => {
+  return (
+    attachArrayWith.space([
+      DB_KEYWORDS.createType,
+      name,
+      DB_KEYWORDS.as,
+      type,
+    ]) + ";"
+  );
 };

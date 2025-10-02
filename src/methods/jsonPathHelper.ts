@@ -1,34 +1,34 @@
-import { Primitive } from '../globalTypes';
-import { CallableFieldParam } from '../internalTypes';
-import { getInternalContext } from './ctxHelper';
-import { throwError } from './errorHelper';
+import { Primitive } from "../globalTypes";
+import { CallableFieldParam } from "../internalTypes";
+import { getInternalContext } from "./ctxHelper";
+import { throwError } from "./errorHelper";
 import {
-  attachArrayWith,
   attachMethodToSymbolRegistry,
   dynamicFieldQuote,
   getPreparedValues,
   getValidCallableFieldValues,
   prepareFieldForJson,
-} from './helperFunction';
+} from "./helperFunction";
 import {
+  attachArrayWith,
   isNonEmptyString,
   isValidArray,
   isValidBoolean,
   isValidNumber,
-} from './util';
+} from "./util";
 
 const filterOutValidData = (d: unknown) =>
   isNonEmptyString(d) || isValidBoolean(d) || isValidNumber(d);
 
 export function jsonPathFn(
   path: string | Primitive[],
-  colOptions?: { asJson?: boolean },
+  colOptions?: { asJson?: boolean }
 ): any {
   const callable = (options: CallableFieldParam) => {
     const { asJson = false } = colOptions || {};
     const { preparedValues } = getValidCallableFieldValues(
       options,
-      'preparedValues',
+      "preparedValues"
     );
 
     if (isValidArray(path)) {
@@ -45,7 +45,7 @@ export function jsonPathFn(
         ctx: getInternalContext(),
       };
     } else if (isNonEmptyString(path)) {
-      path = path.split('.').filter((p) => dynamicFieldQuote(p, []));
+      path = path.split(".").filter((p) => dynamicFieldQuote(p, []));
       return {
         col: prepareFieldForJson(path as string[], preparedValues, 1, asJson),
         alias: null,
@@ -54,6 +54,6 @@ export function jsonPathFn(
     }
     return throwError.invalidJsonPathType(path);
   };
-  attachMethodToSymbolRegistry(callable, 'jsonPathFn');
+  attachMethodToSymbolRegistry(callable, "jsonPathFn");
   return callable;
 }

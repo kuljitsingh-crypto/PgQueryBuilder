@@ -1,10 +1,10 @@
 import "dotenv/config";
 
-import { PgDataType, DBModel, fn, RawQuery, initPgQueryBuilder } from "../src";
+import { PgDataType, DBModel, fn, PgQueryBuilder } from "../src";
 
 const DB_PORT = parseInt(process.env.POSTGRES_DB_PORT || "5432", 10);
 
-initPgQueryBuilder({
+PgQueryBuilder.connect({
   host: process.env.POSTGRES_DB_HOST,
   user: process.env.POSTGRES_DB_USER_NAME,
   password: process.env.POSTGRES_DB_PASSWORD,
@@ -838,7 +838,7 @@ Order.init(
 //   console.dir({ ' Query Result->': res }, { depth: null });
 // });
 
-// RawQuery.query(
+// PgQueryBuilder.rawQuery(
 //   "SELECT * FROM information_schema.columns Where table_name = 'companies'"
 //   //'SELECT * FROM basket_a AS t WHERE EXISTS (SELECT 1 FROM ((SELECT * FROM basket_b UNION SELECT * FROM basket_c) INTERSECT SELECT * FROM basket_d) AS y WHERE (b = t.a))',
 //   // 'SELECT * FROM basket_a AS t WHERE EXISTS ((SELECT 1 FROM basket_b WHERE (b = t.a) UNION SELECT 1 FROM basket_c) INTERSECT SELECT 1 FROM basket_d)',
@@ -877,18 +877,84 @@ Order.init(
 
 //SELECT * FROM (((SELECT * FROM basket_a AS t UNION ALL (SELECT * FROM basket_c)) INTERSECT (SELECT * FROM basket_d)INTERSECT (SELECT * FROM basket_e))) AS results WHERE (a = $1)
 
-fn.doBlock
-  .run({
-    queries: ["CREATE EXTENSION  hstore;"],
-    onExceptions: { duplicateObject: null },
-    showQuery: true,
-  })
-  .then((res) => {
-    console.log("do block query->", res);
-  })
-  .catch((err) => {
-    console.log("do block err->", err);
-  });
+// fn.customDataType.create({
+//   name: "test2",
+//   type: { id: PgDataType.int, enum_test: PgDataType.enum(["1", "2", "4"]) },
+//   ignoreIfExists: true,
+//   showQuery: true,
+// });
+
+// fn.customDataType
+//   .create({
+//     name: "enummmm",
+//     type: PgDataType.enum(["1", "2", "4"]),
+//     ignoreIfExists: true,
+//     showQuery: true,
+//   })
+//   .then(console.log)
+//   .catch(console.log);
+
+// fn.customDataType
+//   .addValue({ showQuery: true, name: "enummmm", newValue: true })
+//   .then(console.log);
+
+// fn.customDataType
+//   .addAttr({
+//     name: "test2",
+//     attrName: "newAttr2",
+//     attrType: PgDataType.enum([2, 3]),
+//     showQuery: true,
+//   })
+//   .then(console.log);
+
+// fn.customDataType
+//   .dropType({
+//     name: "test2",
+//     type: "CASCADE",
+//     showQuery: true,
+//   })
+//   .then(console.log)
+//   .catch(console.log);
+
+// fn.customDataType
+//   .renameType({
+//     oldName: "test",
+//     newName: "testy",
+//     showQuery: true,
+//   })
+//   .then(console.log)
+//   .catch(console.log);
+
+// fn.customDataType
+//   .renameAttr({
+//     name: "testy",
+//     oldAttrName: "id",
+//     newAttrName: "idy",
+//     showQuery: true,
+//   })
+//   .then(console.log)
+//   .catch(console.log);
+
+// fn.customDataType
+//   .getType({
+//     name: "testy",
+//     showQuery: true,
+//   })
+//   .then(console.log)
+//   .catch(console.log);
+
+// fn.doBlock
+//   .run({
+//     queries: ["CREATE EXTENSION  hstore;"],
+//     onExceptions: { duplicateObject: null },
+//     showQuery: true,
+//   })
+//   .then((res) => {
+//     console.log("do block query->", res);
+//   })
+//   .catch((err) => {
+//     console.log("do block err->", err);
+//   });
 
 (function () {
   console.log("Test module run");

@@ -1,4 +1,3 @@
-import { DBMiddleware } from "./clases/middleware";
 import { Table, TableValues } from "./constants/dataTypes";
 import { DB_KEYWORDS } from "./constants/dbkeywords";
 import { ReferenceTable } from "./constants/foreignkeyActions";
@@ -17,7 +16,6 @@ import { ColumnHelper } from "./methods/columnHelper";
 import { errorHandler, throwError } from "./methods/errorHelper";
 import { FieldHelper } from "./methods/fieldHelper";
 import {
-  attachArrayWith,
   covertStrArrayToStr,
   createPlaceholder,
   fieldQuote,
@@ -26,6 +24,7 @@ import {
 import { pgConnect } from "./methods/pgHelper";
 import { QueryHelper } from "./methods/queryHelper";
 import { RawQueryHandler } from "./methods/rawQueryHelper";
+import { attachArrayWith } from "./methods/util";
 
 //============================================= CONSTANTS ===================================================//
 const enumQryPrefix = `DO $$ BEGIN CREATE TYPE`;
@@ -176,6 +175,7 @@ export class DBModel extends DBQuery {
       tableColumns.add(key);
       columns.push(DBModel.#createColumn(key, value, primaryKeys, enums));
     });
+    // console.log(columns);
     this.tableColumns = tableColumns;
     if (primaryKeys.length <= 0) {
       throwError.invalidPrimaryColType(tableName);
@@ -255,35 +255,5 @@ export class DBModel extends DBQuery {
       values.push(`${DB_KEYWORDS.onUpdate} ${onUpdate}`);
     }
     return attachArrayWith.space(values);
-  }
-}
-
-export class PgQueryBuilder extends DBMiddleware {
-  constructor() {
-    super();
-    return throwError.invalidConstructorType();
-  }
-}
-
-export class RawQueryHelper {
-  static async query(
-    qry: RawQuery = {} as RawQuery,
-    params: Primitive[] = [],
-    showQuery = false
-  ) {
-    const { query: rawQry, values } = RawQueryHandler.buildRawQuery(
-      qry,
-      params
-    );
-    try {
-      const result = await pgConnect.connection.query({
-        query: rawQry,
-        params: values,
-        showQuery,
-      });
-      return { rows: result.rows, count: result.rowCount };
-    } catch (error) {
-      return errorHandler(rawQry, values, error as Error);
-    }
   }
 }

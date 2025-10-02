@@ -4,9 +4,13 @@ import { supportedLang } from "../constants/language";
 import { simpleDataType } from "../constants/simpleDataTypes";
 import { DOBlock, PreparedValues } from "../internalTypes";
 import { errorHandler } from "./errorHelper";
-import { attachArrayWith } from "./helperFunction";
 import { pgConnect } from "./pgHelper";
-import { isNonEmptyObject, isNonEmptyString, isValidArray } from "./util";
+import {
+  attachArrayWith,
+  isNonEmptyObject,
+  isNonEmptyString,
+  isValidArray,
+} from "./util";
 
 const prepareVariable = (
   results: string[],
@@ -54,7 +58,7 @@ const prepareQueries = (results: string[], queries: DOBlock["queries"]) => {
     return;
   }
   queries.forEach((query) => {
-    query = query.endsWith(";") ? query : query + ";";
+    // query = query.endsWith(";") ? query : query + ";";
     results.push(query);
   });
 };
@@ -88,7 +92,7 @@ class DOHelper {
     prepareExceptions(results, onExceptions);
     results.push(endStr, "$$", DB_KEYWORDS.language, supportedLang[language]);
     return {
-      query: attachArrayWith.space(results),
+      query: attachArrayWith.space(results) + ";",
       params: preparedValues.values,
     };
   }

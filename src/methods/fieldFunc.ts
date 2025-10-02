@@ -1,6 +1,6 @@
-import { PgDataType } from '../constants/dataTypes';
-import { DB_KEYWORDS } from '../constants/dbkeywords';
-import { Primitive } from '../globalTypes';
+import { PgDataType } from "../constants/dataTypes";
+import { DB_KEYWORDS } from "../constants/dbkeywords";
+import { Primitive } from "../globalTypes";
 import {
   AllowedFields,
   CallableField,
@@ -9,17 +9,17 @@ import {
   InOperationSubQuery,
   PreparedValues,
   WhereClause,
-} from '../internalTypes';
-import { TableFilter } from './filterHelper';
+} from "../internalTypes";
+import { TableFilter } from "./filterHelper";
 import {
-  attachArrayWith,
   covertJSDataToSQLData,
   fieldQuote,
   getPreparedValues,
   validCallableColCtx,
-} from './helperFunction';
-import { QueryHelper } from './queryHelper';
+} from "./helperFunction";
+import { QueryHelper } from "./queryHelper";
 import {
+  attachArrayWith,
   isCallableColumn,
   isColAliasNameArr,
   isNonEmptyString,
@@ -28,16 +28,16 @@ import {
   isValidCaseQuery,
   isValidSubQuery,
   isValidWhereQuery,
-} from './util';
+} from "./util";
 
 export type ArrayArg<P, Model> =
   | P
-  | InOperationSubQuery<Model, 'WhereNotReq', 'single'>
+  | InOperationSubQuery<Model, "WhereNotReq", "single">
   | CallableField;
 
 export type Arg<Model, P extends Primitive = Primitive> =
   | P
-  | InOperationSubQuery<Model, 'WhereNotReq', 'single'>
+  | InOperationSubQuery<Model, "WhereNotReq", "single">
   | CallableField
   | CaseSubquery<Model>
   | WhereClause<Model>
@@ -49,12 +49,12 @@ const prepareArrayData = (
   preparedValues: PreparedValues,
   groupByFields: GroupByFields,
   allowedFields: AllowedFields,
-  type: string,
+  type: string
 ) => {
   const arrayKeyword = DB_KEYWORDS.array;
   type = type || covertJSDataToSQLData(arr[0]);
   const strArr = arr.map((a) =>
-    getFieldValue(key, a, preparedValues, groupByFields, allowedFields),
+    getFieldValue(key, a, preparedValues, groupByFields, allowedFields)
   );
   return `(${arrayKeyword}[${attachArrayWith.coma(strArr)}]::${type}[])`;
 };
@@ -73,7 +73,7 @@ export const getFieldValue = <Model>(
     isFromCol?: boolean;
     treatSimpleObjAsWhereSubQry?: boolean;
     customArrayType?: string;
-  } = {},
+  } = {}
 ): string | null => {
   const {
     isExistsFilter = false,
@@ -81,7 +81,7 @@ export const getFieldValue = <Model>(
     treatStrAsCol = false,
     isFromCol = false,
     treatSimpleObjAsWhereSubQry = true,
-    customArrayType = '',
+    customArrayType = "",
     ...callableOptions
   } = options;
   if (treatStrAsCol && isNonEmptyString(value)) {
@@ -101,29 +101,29 @@ export const getFieldValue = <Model>(
     return col;
   } else if (isValidCaseQuery(value, { treatSimpleObjAsWhereSubQry })) {
     const v = value as any;
-    if (typeof v.else !== 'undefined') {
+    if (typeof v.else !== "undefined") {
       const elseVal = getFieldValue(
         key,
         v.else,
         preparedValues,
         groupByFields,
-        allowedFields,
+        allowedFields
       );
       return attachArrayWith.space([DB_KEYWORDS.else, elseVal]);
-    } else if (typeof v.when !== 'undefined' && typeof v.then !== 'undefined') {
+    } else if (typeof v.when !== "undefined" && typeof v.then !== "undefined") {
       const query = TableFilter.prepareFilterStatement(
         allowedFields,
         groupByFields,
         preparedValues,
         v.when,
-        { isWhereKeywordReq: false },
+        { isWhereKeywordReq: false }
       );
       const thenVal = getFieldValue(
         key,
         v.then,
         preparedValues,
         groupByFields,
-        allowedFields,
+        allowedFields
       );
       return attachArrayWith.space([
         DB_KEYWORDS.when,
@@ -134,11 +134,11 @@ export const getFieldValue = <Model>(
     }
   } else if (isValidSubQuery(value)) {
     const query = QueryHelper.otherModelSubqueryBuilder(
-      '',
+      "",
       preparedValues,
       groupByFields,
       value,
-      { isExistsFilter, refAllowedFields },
+      { isExistsFilter, refAllowedFields }
     );
     return query;
   } else if (isFromCol && isColAliasNameArr(value)) {
@@ -148,7 +148,7 @@ export const getFieldValue = <Model>(
       preparedValues,
       groupByFields,
       allowedFields,
-      options,
+      options
     );
   } else if (isValidWhereQuery(key, value, { treatSimpleObjAsWhereSubQry })) {
     const query = TableFilter.prepareFilterStatement(
@@ -156,7 +156,7 @@ export const getFieldValue = <Model>(
       groupByFields,
       preparedValues,
       value,
-      { customKeyWord: '' },
+      { customKeyWord: "" }
     );
     return query;
   } else if (isValidArray(value)) {
@@ -166,7 +166,7 @@ export const getFieldValue = <Model>(
       preparedValues,
       groupByFields,
       allowedFields,
-      customArrayType,
+      customArrayType
     );
   }
   return null;

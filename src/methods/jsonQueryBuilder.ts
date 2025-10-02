@@ -1,8 +1,8 @@
+import { DB_KEYWORDS } from "../constants/dbkeywords";
 import { Primitive } from "../globalTypes";
 import { throwError } from "./errorHelper";
-import { attachArrayWith } from "./helperFunction";
 import { toJsonStr } from "./jsonFunctionHelepr";
-import { isNonNullableValue, isNullableValue } from "./util";
+import { attachArrayWith, isNonNullableValue, isNullableValue } from "./util";
 
 const funcs = {
   type: "type",
@@ -41,7 +41,7 @@ const constant = {
   startBracket: "(",
   endBracket: ")",
   key: "key",
-  wildcard: "*",
+  wildcard: DB_KEYWORDS.wildcard,
   recursive: "**",
   val: "value",
   and: "&&",
@@ -278,7 +278,8 @@ export class JPathBuilder {
   }
 
   at(index?: number) {
-    let strIndex = typeof index === "number" ? index : "*";
+    let strIndex: any =
+      typeof index === "number" ? index : DB_KEYWORDS.wildcard;
     strIndex = `[${strIndex}]`;
     if (!funcHelper.isInsideCtx(this)) {
       funcHelper.addBase(this);

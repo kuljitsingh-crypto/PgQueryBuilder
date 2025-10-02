@@ -288,7 +288,6 @@ export type WhereClauseKeys = "$and" | "$or" | string;
 
 export type TableCreationOptions = {
   tableName: string;
-  reference?: Reference;
   timestamps?:
     | boolean
     | Partial<{ createdAt: boolean | string; updatedAt: boolean | string }>;

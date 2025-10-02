@@ -7,11 +7,9 @@ import {
   TableCreationOptions,
 } from "../internalTypes";
 import { throwError } from "../methods/errorHelper";
-import {
-  attachArrayWith,
-  covertStrArrayToStr,
-} from "../methods/helperFunction";
+import { covertStrArrayToStr } from "../methods/helperFunction";
 import { pgConnect } from "../methods/pgHelper";
+import { attachArrayWith } from "../methods/util";
 import { DCL } from "./dcl";
 
 const enumQryPrefix = `DO $$ BEGIN CREATE TYPE`;
@@ -22,11 +20,11 @@ export class DDL extends DCL {
     super();
     return throwError.invalidConstructorType();
   }
-  static createTable<T extends string>(
+  static init<T extends string>(
     modelObj: Table<T>,
     option: TableCreationOptions & Partial<QueryExtraOptions>
   ) {
-    const { tableName, reference = {}, showQuery } = option;
+    const { tableName, timestamps, showQuery } = option;
     this.tableName = tableName;
     const primaryKeys: string[] = [];
     const columns: string[] = [];
@@ -42,9 +40,9 @@ export class DDL extends DCL {
       throwError.invalidPrimaryColType(tableName);
     }
     columns.push(DDL.#createPrimaryColumn(primaryKeys));
-    Object.entries(reference).forEach(([key, ref]) => {
-      columns.push(DDL.#createForeignColumn(key, ref));
-    });
+    // Object.entries(reference).forEach(([key, ref]) => {
+    //   columns.push(DDL.#createForeignColumn(key, ref));
+    // });
     const createEnumQryPromise = Promise.all(
       enums.map((e) => pgConnect.connection.query({ query: e }))
     );
@@ -99,22 +97,22 @@ export class DDL extends DCL {
   static #createPrimaryColumn(primaryKeys: string[]) {
     return `${DB_KEYWORDS.primaryKey} (${attachArrayWith.coma(primaryKeys)})`;
   }
-  static #createForeignColumn(parentTable: string, ref: ReferenceTable) {
-    const { parentColumn, column, constraintName, onDelete, onUpdate } = ref;
-    const colStr = covertStrArrayToStr(column);
-    const parentColStr = covertStrArrayToStr(parentColumn);
-    const values: string[] = [];
-    if (constraintName) {
-      values.push(`${DB_KEYWORDS.constraint} ${constraintName}`);
-    }
-    values.push(`${DB_KEYWORDS.foreignKey} (${colStr})`);
-    values.push(`${DB_KEYWORDS.references} "${parentTable}" (${parentColStr})`);
-    if (onDelete) {
-      values.push(`${DB_KEYWORDS.onDelete} ${onDelete}`);
-    }
-    if (onUpdate) {
-      values.push(`${DB_KEYWORDS.onUpdate} ${onUpdate}`);
-    }
-    return attachArrayWith.space(values);
-  }
+  // static #createForeignColumn(parentTable: string, ref: ReferenceTable) {
+  //   const { parentColumn, column, constraintName, onDelete, onUpdate } = ref;
+  //   const colStr = covertStrArrayToStr(column);
+  //   const parentColStr = covertStrArrayToStr(parentColumn);
+  //   const values: string[] = [];
+  //   if (constraintName) {
+  //     values.push(`${DB_KEYWORDS.constraint} ${constraintName}`);
+  //   }
+  //   values.push(`${DB_KEYWORDS.foreignKey} (${colStr})`);
+  //   values.push(`${DB_KEYWORDS.references} "${parentTable}" (${parentColStr})`);
+  //   if (onDelete) {
+  //     values.push(`${DB_KEYWORDS.onDelete} ${onDelete}`);
+  //   }
+  //   if (onUpdate) {
+  //     values.push(`${DB_KEYWORDS.onUpdate} ${onUpdate}`);
+  //   }
+  //   return attachArrayWith.space(values);
+  // }
 }

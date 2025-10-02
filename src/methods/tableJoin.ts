@@ -1,6 +1,6 @@
-import { DB_KEYWORDS } from '../constants/dbkeywords';
-import { OP } from '../constants/operators';
-import { TABLE_JOIN, TableJoinType } from '../constants/tableJoin';
+import { DB_KEYWORDS } from "../constants/dbkeywords";
+import { OP } from "../constants/operators";
+import { TABLE_JOIN, TableJoinType } from "../constants/tableJoin";
 import {
   AllowedFields,
   TableJoin as JoinType,
@@ -11,32 +11,31 @@ import {
   OtherJoin,
   PreparedValues,
   GroupByFields,
-} from '../internalTypes';
-import { throwError } from './errorHelper';
-import { FieldHelper } from './fieldHelper';
+} from "../internalTypes";
+import { throwError } from "./errorHelper";
 import {
-  attachArrayWith,
   createNewObj,
   fieldQuote,
   getJoinSubqueryFields,
-} from './helperFunction';
-import { QueryHelper } from './queryHelper';
+} from "./helperFunction";
+import { QueryHelper } from "./queryHelper";
 import {
+  attachArrayWith,
   ensureArray,
   isEmptyObject,
   isNonEmptyObject,
   isNonEmptyString,
   isValidSimpleModel,
   isValidSubQuery,
-} from './util';
+} from "./util";
 
 type UpdatedSelfJoin<Model> = SelfJoin<Model> & {
-  type: 'selfJoin';
+  type: "selfJoin";
   name: string;
 };
-type UpdatedCrossJoin<Model> = CrossJoin<Model> & { type: 'crossJoin' };
+type UpdatedCrossJoin<Model> = CrossJoin<Model> & { type: "crossJoin" };
 type UpdatedOtherJoin<Model> = OtherJoin<Model> & {
-  type: 'innerJoin' | 'leftJoin' | 'rightJoin' | 'fullJoin';
+  type: "innerJoin" | "leftJoin" | "rightJoin" | "fullJoin";
 };
 type UpdatedJoin<Model> =
   | UpdatedCrossJoin<Model>
@@ -44,38 +43,38 @@ type UpdatedJoin<Model> =
   | UpdatedSelfJoin<Model>;
 
 const isCrossJoin = <Model>(
-  join: UpdatedJoin<Model>,
-): join is UpdatedCrossJoin<Model> => join.type === 'crossJoin';
+  join: UpdatedJoin<Model>
+): join is UpdatedCrossJoin<Model> => join.type === "crossJoin";
 
 const isSelfJoin = <Model>(
-  join: UpdatedJoin<Model>,
-): join is UpdatedSelfJoin<Model> => join.type === 'selfJoin';
+  join: UpdatedJoin<Model>
+): join is UpdatedSelfJoin<Model> => join.type === "selfJoin";
 
 const joinTableCond = <Model>(
-  cond: JoinCond<Model, 'WhereNotReq', 'single'>,
+  cond: JoinCond<Model, "WhereNotReq", "single">,
   allowedFields: AllowedFields,
   preparedValues: PreparedValues,
-  groupByFields: GroupByFields,
+  groupByFields: GroupByFields
 ) => {
   const onStr = attachArrayWith.and(
     Object.entries(cond).map(([baseColumn, joinColumn]) => {
       const value = isNonEmptyString(joinColumn)
         ? fieldQuote(allowedFields, preparedValues, joinColumn)
         : QueryHelper.otherModelSubqueryBuilder(
-            '',
+            "",
             preparedValues,
             groupByFields,
             joinColumn,
-            { isExistsFilter: false },
+            { isExistsFilter: false }
           );
       return attachArrayWith.space([
         fieldQuote(allowedFields, preparedValues, baseColumn),
         OP.eq,
         value,
       ]);
-    }),
+    })
   );
-  return onStr ? `(${onStr})` : '';
+  return onStr ? `(${onStr})` : "";
 };
 export class TableJoin {
   static prepareTableJoin<Model>(
@@ -83,10 +82,10 @@ export class TableJoin {
     allowedFields: AllowedFields,
     preparedValues: PreparedValues,
     groupByFields: GroupByFields,
-    include?: Record<TableJoinType, JoinQuery<TableJoinType, Model>>,
+    include?: Record<TableJoinType, JoinQuery<TableJoinType, Model>>
   ) {
     if (isEmptyObject(include)) {
-      return '';
+      return "";
     }
     const join = getJoinSubqueryFields(include as any);
     const joinArr: string[] = [];
@@ -103,7 +102,7 @@ export class TableJoin {
         preparedValues,
         groupByFields,
         joinArr,
-        valArr,
+        valArr
       );
     });
 
@@ -116,7 +115,7 @@ export class TableJoin {
       allowedFields: AllowedFields;
       preparedValues: PreparedValues;
       groupByFields: GroupByFields;
-    },
+    }
   ): string {
     if (isSelfJoin(join)) {
       return join.name;
@@ -125,11 +124,11 @@ export class TableJoin {
       return (join.model as any).tableName;
     } else if (isNonEmptyObject(join.model)) {
       return QueryHelper.otherModelSubqueryBuilder(
-        '',
+        "",
         options.preparedValues,
         options.groupByFields,
         join.model as any,
-        { isExistsFilter: false, isColumnReq: false },
+        { isExistsFilter: false, isColumnReq: false }
       );
     }
     return throwError.invalidModelType();
@@ -142,18 +141,18 @@ export class TableJoin {
     preparedValues: PreparedValues,
     groupByFields: GroupByFields,
     joins: string[],
-    joinQueries: (OtherJoin<Model> | SelfJoin<Model> | CrossJoin<Model>)[],
+    joinQueries: (OtherJoin<Model> | SelfJoin<Model> | CrossJoin<Model>)[]
   ) {
     joinQueries.forEach((join: any) => {
       join.type = type;
-      if (type === 'selfJoin') {
+      if (type === "selfJoin") {
         join.name = selfModelName;
       }
       const joinQry = TableJoin.#prepareJoinStr(
         allowedFields,
         preparedValues,
         groupByFields,
-        join,
+        join
       );
       joins.push(joinQry);
     });
@@ -163,7 +162,7 @@ export class TableJoin {
     allowedFields: AllowedFields,
     preparedValues: PreparedValues,
     groupByFields: GroupByFields,
-    join: UpdatedJoin<Model>,
+    join: UpdatedJoin<Model>
   ) {
     const { type, alias, modelAlias, ...restJoin } = join;
     const joinName = TABLE_JOIN[type];
@@ -174,11 +173,11 @@ export class TableJoin {
     const isSubquery = isValidSubQuery(restJoin);
     const table = isSubquery
       ? QueryHelper.otherModelSubqueryBuilder(
-          '',
+          "",
           preparedValues,
           groupByFields,
           createNewObj(restJoin, { alias: modelAlias }),
-          { isExistsFilter: false },
+          { isExistsFilter: false }
         )
       : TableJoin.#getJoinModelName(join, {
           preparedValues,

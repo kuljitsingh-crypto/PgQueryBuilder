@@ -1,15 +1,20 @@
-import { DB_KEYWORDS } from '../constants/dbkeywords';
-import { Primitive } from '../globalTypes';
-import { PreparedValues, RawQuery } from '../internalTypes';
-import { throwError } from './errorHelper';
-import { attachArrayWith, getPreparedValues } from './helperFunction';
-import { isNonEmptyObject, isNonEmptyString, isValidArray } from './util';
+import { DB_KEYWORDS } from "../constants/dbkeywords";
+import { Primitive } from "../globalTypes";
+import { PreparedValues, RawQuery } from "../internalTypes";
+import { throwError } from "./errorHelper";
+import { getPreparedValues } from "./helperFunction";
+import {
+  attachArrayWith,
+  isNonEmptyObject,
+  isNonEmptyString,
+  isValidArray,
+} from "./util";
 
 const checkAndAddQuery = (
   queries: string[],
   attrName?: string[],
   prefix?: string,
-  replaceWithIndex?: number,
+  replaceWithIndex?: number
 ) => {
   if (!isValidArray(attrName)) {
     return;
@@ -24,7 +29,7 @@ const checkAndAddQuery = (
     data.push(prefix);
   }
   data.push(attrStr);
-  if (typeof replaceWithIndex == 'number') {
+  if (typeof replaceWithIndex == "number") {
     queries[replaceWithIndex] = attachArrayWith.space(data);
   } else {
     queries.push(attachArrayWith.space(data));
@@ -42,7 +47,7 @@ export class RawQueryHandler {
     if (isNonEmptyObject(query)) {
       const queries: string[] = [DB_KEYWORDS.select];
       const {
-        table: tableName = '',
+        table: tableName = "",
         columns,
         distinct,
         limit,
@@ -57,7 +62,7 @@ export class RawQueryHandler {
       if (distinct) {
         queries.push(DB_KEYWORDS.distinct);
       }
-      queries.push('*');
+      queries.push(DB_KEYWORDS.wildcard);
       const lastIndx = queries.length - 1;
       checkAndAddQuery(queries, columns, undefined, lastIndx);
       queries.push(DB_KEYWORDS.from, tableName);

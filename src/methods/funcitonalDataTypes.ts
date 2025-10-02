@@ -1,4 +1,6 @@
+import { DB_KEYWORDS } from "../constants/dbkeywords";
 import { simpleDataType } from "../constants/simpleDataTypes";
+import { Primitive } from "../globalTypes";
 import { filterOutValidDbData, range } from "./util";
 
 export const functionalDataType = {
@@ -17,15 +19,18 @@ export const functionalDataType = {
   array(
     type: (typeof simpleDataType)[keyof typeof simpleDataType],
     dimension: number
-  ) {
+  ): any {
     const dimnStr = range(1, dimension).map((_) => "[]");
     return `${type} ${dimnStr}`;
   },
-  enum(values: string[]): any {
+  enum(values: Primitive[]): any {
     const valueStr = values
       .filter(filterOutValidDbData())
       .map((v) => `'${v}'`)
       .join(",");
-    return `ENUM(${valueStr})`;
+    return `${DB_KEYWORDS.enum}(${valueStr})`;
+  },
+  custom(name: string): any {
+    return name;
   },
 } as const;

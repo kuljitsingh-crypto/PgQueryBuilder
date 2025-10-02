@@ -1,11 +1,14 @@
 import { Primitive } from "../globalTypes";
 import { functionalDataType } from "../methods/funcitonalDataTypes";
+import { ReferenceTable } from "./foreignkeyActions";
 import { simpleDataType } from "./simpleDataTypes";
 
 export const PgDataType = {
   ...simpleDataType,
   ...functionalDataType,
 } as const;
+
+export type PgDataTypes = (typeof PgDataType)[keyof typeof PgDataType];
 
 export const PgSpecialValue = {
   currentDate: "CURRENT_DATE",
@@ -25,6 +28,7 @@ export type Table<T extends string = string> = {
     unique?: boolean;
     notNull?: boolean;
     check?: string;
+    reference?: ReferenceTable;
   };
 };
 

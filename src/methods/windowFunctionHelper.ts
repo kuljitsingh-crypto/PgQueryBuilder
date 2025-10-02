@@ -1,4 +1,4 @@
-import { DB_KEYWORDS } from '../constants/dbkeywords';
+import { DB_KEYWORDS } from "../constants/dbkeywords";
 import {
   doubleExprWindowFns,
   exprWithExtraWindowFns,
@@ -8,8 +8,8 @@ import {
   windowFunctionNames,
   WindowFunctions,
   ZeroParamWindowFunction,
-} from '../constants/fieldFunctions';
-import { Primitive } from '../globalTypes';
+} from "../constants/fieldFunctions";
+import { Primitive } from "../globalTypes";
 import {
   AllowedFields,
   CallableField,
@@ -18,29 +18,33 @@ import {
   GroupByFields,
   ORDER_BY,
   PreparedValues,
-} from '../internalTypes';
-import { getInternalContext } from './ctxHelper';
-import { throwError } from './errorHelper';
-import { Arg, getFieldValue } from './fieldFunc';
+} from "../internalTypes";
+import { getInternalContext } from "./ctxHelper";
+import { throwError } from "./errorHelper";
+import { Arg, getFieldValue } from "./fieldFunc";
 import {
-  attachArrayWith,
   attachMethodToSymbolRegistry,
   getValidCallableFieldValues,
   prepareMultipleValues,
-} from './helperFunction';
-import { OrderByQuery } from './orderBy';
-import { isNonEmptyObject, isNonEmptyString, isNullableValue } from './util';
+} from "./helperFunction";
+import { OrderByQuery } from "./orderBy";
+import {
+  attachArrayWith,
+  isNonEmptyObject,
+  isNonEmptyString,
+  isNullableValue,
+} from "./util";
 
 const frameFunction = {
-  rows: 'ROWS',
-  groups: 'GROUPS',
-  range: 'RANGE',
+  rows: "ROWS",
+  groups: "GROUPS",
+  range: "RANGE",
 };
 
-const currentRow = 'CURRENT ROW';
-const unbounded = 'UNBOUNDED';
-const precedingKey = 'PRECEDING';
-const followingKey = 'FOLLOWING';
+const currentRow = "CURRENT ROW";
+const unbounded = "UNBOUNDED";
+const precedingKey = "PRECEDING";
+const followingKey = "FOLLOWING";
 
 const allowedFuncParams = new Set([unbounded, currentRow]);
 
@@ -50,7 +54,7 @@ type Suffix = typeof precedingKey | typeof followingKey;
 type FrameFunc<Model> = {
   [key in FrameFunctionKeys]: (
     preceding: typeof unbounded | Arg<Model, number>,
-    following: typeof unbounded | typeof currentRow | Arg<Model, number>,
+    following: typeof unbounded | typeof currentRow | Arg<Model, number>
   ) => CallableField;
 };
 
@@ -64,18 +68,18 @@ type WindowFunctionOptions<Model> = {
 };
 
 type NoArgWindowFunction<Model> = (
-  options?: WindowFunctionOptions<Model>,
+  options?: WindowFunctionOptions<Model>
 ) => CallableField;
 
 type SingleArgWindowFunction<Model> = (
   arg: Primitive,
-  options?: WindowFunctionOptions<Model>,
+  options?: WindowFunctionOptions<Model>
 ) => CallableField;
 
 type DoubleArgWindowFunction<Model> = (
   arg1: Primitive,
   arg2: Primitive,
-  options?: WindowFunctionOptions<Model>,
+  options?: WindowFunctionOptions<Model>
 ) => CallableField;
 
 type WindowFunc<Model> = {
@@ -134,11 +138,11 @@ class FrameFunction {
 
   static #getValidParam = (
     methodName: string,
-    param: 'UNBOUNDED' | 'CURRENT ROW' | number | CallableField,
+    param: "UNBOUNDED" | "CURRENT ROW" | number | CallableField,
     preparedValues: PreparedValues,
     groupByFields: GroupByFields,
     allowedFields: AllowedFields,
-    suffix: Suffix | '' = '',
+    suffix: Suffix | "" = ""
   ) => {
     if (isNonEmptyString(param) && allowedFuncParams.has(param)) {
       return attachArrayWith.space([param, suffix]);
@@ -148,7 +152,7 @@ class FrameFunction {
       param,
       preparedValues,
       groupByFields,
-      allowedFields,
+      allowedFields
     );
     if (!isNonEmptyString(val)) {
       return throwError.invalidFrameFunction(methodName);
@@ -158,8 +162,8 @@ class FrameFunction {
 
   #attachMethods = <T extends FrameFunctionKeys>(methodName: T) => {
     return (
-        preceding: 'UNBOUNDED' | number | CallableField,
-        following: 'UNBOUNDED' | 'CURRENT ROW' | number | CallableField,
+        preceding: "UNBOUNDED" | number | CallableField,
+        following: "UNBOUNDED" | "CURRENT ROW" | number | CallableField
       ) =>
       (options: CallableFieldParam) => {
         const method = frameFunction[methodName];
@@ -169,9 +173,9 @@ class FrameFunction {
         const { preparedValues, allowedFields, groupByFields } =
           getValidCallableFieldValues(
             options,
-            'preparedValues',
-            'allowedFields',
-            'groupByFields',
+            "preparedValues",
+            "allowedFields",
+            "groupByFields"
           );
         const validPreceding = FrameFunction.#getValidParam(
           methodName,
@@ -179,7 +183,7 @@ class FrameFunction {
           preparedValues,
           groupByFields,
           allowedFields,
-          precedingKey,
+          precedingKey
         );
         const validFollowing = FrameFunction.#getValidParam(
           methodName,
@@ -187,7 +191,7 @@ class FrameFunction {
           preparedValues,
           groupByFields,
           allowedFields,
-          following === currentRow ? '' : followingKey,
+          following === currentRow ? "" : followingKey
         );
 
         const col = attachArrayWith.space([
@@ -229,9 +233,9 @@ class WindowFunction {
         const { allowedFields, groupByFields, preparedValues } =
           getValidCallableFieldValues(
             callableParams,
-            'allowedFields',
-            'groupByFields',
-            'preparedValues',
+            "allowedFields",
+            "groupByFields",
+            "preparedValues"
           );
         const frameOptionMaybe =
           getFieldValue(
@@ -239,20 +243,20 @@ class WindowFunction {
             frameOption,
             preparedValues,
             groupByFields,
-            allowedFields,
-          ) ?? '';
+            allowedFields
+          ) ?? "";
         const partitionByMaybe = getFieldValue(
           methodName,
           partitionBy,
           preparedValues,
           groupByFields,
-          allowedFields,
+          allowedFields
         );
         const orderByMaybe = OrderByQuery.prepareOrderByQuery(
           allowedFields,
           preparedValues,
           groupByFields,
-          orderBy,
+          orderBy
         );
         const {
           offset: o,
@@ -261,14 +265,14 @@ class WindowFunction {
           arg1: param1,
           arg2: param2,
         } = prepareMultipleValues(preparedValues, {
-          offset: { type: 'number', val: offset },
-          defaultValue: { type: 'number', val: defaultValue },
-          n: { type: 'number', val: n },
-          arg1: { type: 'primitive', val: arg1 },
-          arg2: { type: 'primitive', val: arg2 },
+          offset: { type: "number", val: offset },
+          defaultValue: { type: "number", val: defaultValue },
+          n: { type: "number", val: n },
+          arg1: { type: "primitive", val: arg1 },
+          arg2: { type: "primitive", val: arg2 },
         });
-        const namesArr = [windowFunctionNames[methodName], '('];
-        if (methodName === 'nthValue') {
+        const namesArr = [windowFunctionNames[methodName], "("];
+        if (methodName === "nthValue") {
           namesArr.push(param1, num);
         } else if (methodName in exprWithExtraWindowFns) {
           namesArr.push(param1, o, deValue);
@@ -277,9 +281,9 @@ class WindowFunction {
         } else if (methodName in doubleExprWindowFns) {
           namesArr.push(param1, param2);
         }
-        namesArr.push(')');
+        namesArr.push(")");
         const functionName = attachArrayWith.noSpace(namesArr);
-        const overArr = [DB_KEYWORDS.over, ' ', '('];
+        const overArr = [DB_KEYWORDS.over, " ", "("];
         const partitions = [];
         if (partitionByMaybe) {
           partitions.push(DB_KEYWORDS.partitionBy, partitionByMaybe);
@@ -288,12 +292,12 @@ class WindowFunction {
           partitions.push(orderByMaybe);
         }
         partitions.push(frameOptionMaybe);
-        overArr.push(attachArrayWith.space(partitions), ')');
+        overArr.push(attachArrayWith.space(partitions), ")");
         const over = attachArrayWith.noSpace(overArr, false);
         const col = attachArrayWith.space([functionName, over]);
         return { col: col, alias: null, ctx: getInternalContext() };
       };
-      attachMethodToSymbolRegistry(callable, 'windowFn', methodName);
+      attachMethodToSymbolRegistry(callable, "windowFn", methodName);
       return callable;
     };
   }
