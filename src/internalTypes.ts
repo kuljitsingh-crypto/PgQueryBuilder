@@ -299,6 +299,7 @@ export type CallableFieldParam = Partial<{
   allowedFields: AllowedFields;
   isAggregateAllowed: boolean;
   customAllowedFields: string[];
+  wildcardColumn: boolean;
 }>;
 
 export type CallableField = (options: CallableFieldParam) => {

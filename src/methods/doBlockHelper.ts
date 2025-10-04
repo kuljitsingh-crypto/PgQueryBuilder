@@ -6,6 +6,7 @@ import { DOBlock, PreparedValues } from "../internalTypes";
 import { errorHandler } from "./errorHelper";
 import { pgConnect } from "./pgHelper";
 import {
+  appendWithSemicolon,
   attachArrayWith,
   isNonEmptyObject,
   isNonEmptyString,
@@ -58,7 +59,6 @@ const prepareQueries = (results: string[], queries: DOBlock["queries"]) => {
     return;
   }
   queries.forEach((query) => {
-    // query = query.endsWith(";") ? query : query + ";";
     results.push(query);
   });
 };
@@ -83,7 +83,7 @@ class DOHelper {
  */
   execute(params: DOBlock) {
     const preparedValues: PreparedValues = { values: [], index: 0 };
-    const endStr = DB_KEYWORDS.end + ";";
+    const endStr = appendWithSemicolon(DB_KEYWORDS.end);
     const { variable, queries, onExceptions, language = "plpgsql" } = params;
     const results: string[] = [DB_KEYWORDS.do, "$$"];
     prepareVariable(results, variable);
@@ -92,7 +92,7 @@ class DOHelper {
     prepareExceptions(results, onExceptions);
     results.push(endStr, "$$", DB_KEYWORDS.language, supportedLang[language]);
     return {
-      query: attachArrayWith.space(results) + ";",
+      query: appendWithSemicolon(attachArrayWith.space(results)),
       params: preparedValues.values,
     };
   }

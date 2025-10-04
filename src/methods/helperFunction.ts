@@ -34,6 +34,7 @@ import {
   isValidObject,
   isValidPreparedValues,
   isValidSymbol,
+  isValidWildcardColumn,
 } from "./util";
 
 type FieldQuoteReturn<T extends boolean> = T extends false
@@ -59,18 +60,25 @@ const callableFieldValidator: Record<
   groupByFields: isValidGroupByFieldsFields,
   isAggregateAllowed: isValidAggregateValue,
   customAllowedFields: isValidCustomALlowedFields,
+  wildcardColumn: isValidWildcardColumn,
 };
 
 const isFieldAllowed =
-  (allowed: AllowedFields, customAllowFields: string[]) => (field: string) =>
-    allowed.has(field) || customAllowFields.includes(field);
+  (
+    allowed: AllowedFields,
+    customAllowFields: string[],
+    wildcardColumn: boolean
+  ) =>
+  (field: string) =>
+    wildcardColumn || allowed.has(field) || customAllowFields.includes(field);
 
 const checkForJsonField =
   (
     allowed: AllowedFields,
     preparedValues: PreparedValues | null,
     customAllowFields: string[],
-    asJson: boolean
+    asJson: boolean,
+    wildcardColumn: boolean
   ) =>
   (field: string) => {
     if (isNullableValue(preparedValues)) {
@@ -79,9 +87,13 @@ const checkForJsonField =
     const fieldArr = field.split(".");
     const simpleField = fieldArr[0];
     const aliasField = `${fieldArr[0]}.${fieldArr[1]}`;
-    if (isFieldAllowed(allowed, customAllowFields)(simpleField)) {
+    if (
+      isFieldAllowed(allowed, customAllowFields, wildcardColumn)(simpleField)
+    ) {
       return prepareFieldForJson(fieldArr, preparedValues, 1, asJson);
-    } else if (isFieldAllowed(allowed, customAllowFields)(aliasField)) {
+    } else if (
+      isFieldAllowed(allowed, customAllowFields, wildcardColumn)(aliasField)
+    ) {
       return prepareFieldForJson(fieldArr, preparedValues, 2, asJson);
     }
     return null;
@@ -95,15 +107,21 @@ const validateField = (
     customAllowFields: string[];
     metadata?: FieldMetadata;
     asJson?: boolean;
+    wildcardColumn?: boolean;
   }
 ) => {
   const {
     customAllowFields = [],
     metadata = {},
     asJson = false,
+    wildcardColumn = false,
   } = options || {};
   field = simpleFieldValidate(field, customAllowFields);
-  const isAllowedField = isFieldAllowed(allowed, customAllowFields)(field);
+  const isAllowedField = isFieldAllowed(
+    allowed,
+    customAllowFields,
+    wildcardColumn
+  )(field);
   if (isAllowedField) {
     return field;
   }
@@ -111,7 +129,8 @@ const validateField = (
     allowed,
     preparedValues,
     customAllowFields,
-    asJson
+    asJson,
+    wildcardColumn
   )(field);
   if (isNonEmptyString(jsonField)) {
     metadata.isJSONField = true;
@@ -246,6 +265,7 @@ export const fieldQuote = <T extends boolean = false>(
     customAllowFields?: string[];
     metadata?: FieldMetadata;
     asJson?: boolean;
+    wildcardColumn?: boolean;
   }
 ): FieldQuoteReturn<T> => {
   const {
@@ -253,6 +273,7 @@ export const fieldQuote = <T extends boolean = false>(
     customAllowFields = [],
     metadata,
     asJson,
+    wildcardColumn,
   } = options || {};
   if (str === null && isNullColAllowed) {
     return str as any;
@@ -264,6 +285,7 @@ export const fieldQuote = <T extends boolean = false>(
     customAllowFields,
     metadata,
     asJson,
+    wildcardColumn,
   });
   return quote(str);
 };

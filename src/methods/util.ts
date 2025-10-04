@@ -99,6 +99,10 @@ export function isValidCustomALlowedFields(value: unknown): boolean {
   return isValidArray(value);
 }
 
+export function isValidWildcardColumn(value: unknown): boolean {
+  return isValidBoolean(value);
+}
+
 export function isValidAllowedFields(
   allowedFields: unknown
 ): allowedFields is AllowedFields {
@@ -333,13 +337,10 @@ export const isUndefined = (val: unknown): val is undefined => {
   return typeof val === "undefined";
 };
 
+export const appendWithSemicolon = (qry: string) => qry + ";";
+
 export const buildCreateQry = (name: string, type: string) => {
-  return (
-    attachArrayWith.space([
-      DB_KEYWORDS.createType,
-      name,
-      DB_KEYWORDS.as,
-      type,
-    ]) + ";"
+  return appendWithSemicolon(
+    attachArrayWith.space([DB_KEYWORDS.createType, name, DB_KEYWORDS.as, type])
   );
 };
