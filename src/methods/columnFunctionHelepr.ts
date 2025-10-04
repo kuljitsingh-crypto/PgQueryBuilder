@@ -2,28 +2,30 @@ import {
   CallableField,
   CallableFieldParam,
   FieldMetadata,
-} from '../internalTypes';
-import { getInternalContext } from './ctxHelper';
+} from "../internalTypes";
+import { getInternalContext } from "./ctxHelper";
 import {
   attachMethodToSymbolRegistry,
   fieldQuote,
   getValidCallableFieldValues,
-} from './helperFunction';
+} from "./helperFunction";
 
 export function colFn(col: string, colOptions?: { asJson?: boolean }): any {
   const callable = (options: CallableFieldParam) => {
     const { asJson } = colOptions || {};
     const { allowedFields, preparedValues } = getValidCallableFieldValues(
       options,
-      'allowedFields',
-      'preparedValues',
+      "allowedFields",
+      "preparedValues"
     );
     const metadata = {} as FieldMetadata;
     const customAllowFields = options?.customAllowedFields || [];
+    const wildcardColumn = options?.wildcardColumn || false;
     const column = fieldQuote(allowedFields, preparedValues, col, {
       customAllowFields,
       metadata,
       asJson,
+      wildcardColumn,
     });
     return {
       col: metadata.isJSONField ? `(${column})` : column,
@@ -31,6 +33,6 @@ export function colFn(col: string, colOptions?: { asJson?: boolean }): any {
       ctx: getInternalContext(),
     };
   };
-  attachMethodToSymbolRegistry(callable, 'colFn');
+  attachMethodToSymbolRegistry(callable, "colFn");
   return callable;
 }

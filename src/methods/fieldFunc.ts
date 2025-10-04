@@ -73,6 +73,7 @@ export const getFieldValue = <Model>(
     isFromCol?: boolean;
     treatSimpleObjAsWhereSubQry?: boolean;
     customArrayType?: string;
+    wildcardColumn?: boolean;
   } = {}
 ): string | null => {
   const {
@@ -87,6 +88,7 @@ export const getFieldValue = <Model>(
   if (treatStrAsCol && isNonEmptyString(value)) {
     return fieldQuote(allowedFields, preparedValues, value, {
       customAllowFields: callableOptions.customAllowedFields,
+      wildcardColumn: callableOptions.wildcardColumn,
     });
   } else if (isPrimitiveValue(value)) {
     return getPreparedValues(preparedValues, value as Primitive);
