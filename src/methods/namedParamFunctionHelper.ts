@@ -1,37 +1,36 @@
 import { Primitive } from "../globalTypes";
-import { CallableFieldParam, PreparedValues } from "../internalTypes";
+import {
+  AllowedFields,
+  CallableFieldParam,
+  GroupByFields,
+  PreparedValues,
+} from "../internalTypes";
 import { getInternalContext } from "./ctxHelper";
+import { getFieldValue } from "./fieldFunc";
 import {
   attachMethodToSymbolRegistry,
   dynamicFieldQuote,
-  getPreparedValues,
   getValidCallableFieldValues,
   prepareSQLDataType,
 } from "./helperFunction";
-import { toJsonStr } from "./jsonFunctionHelepr";
-import {
-  attachArrayWith,
-  isNonEmptyObject,
-  isPrimitiveValue,
-  isValidArray,
-} from "./util";
+import { attachArrayWith } from "./util";
 
 const prepareValForNamedParam = (
   preparedValues: PreparedValues,
+  allowedFields: AllowedFields,
+  groupByFields: GroupByFields,
   val: unknown
 ) => {
   const type = prepareSQLDataType(val);
-  let updateVal: string | null = null;
-  if (isPrimitiveValue(val)) {
-    updateVal = getPreparedValues(preparedValues, val);
-  } else if (isValidArray(val)) {
-    updateVal = getPreparedValues(
-      preparedValues,
-      `{${attachArrayWith.coma(val as any)}}`
-    );
-  } else if (isNonEmptyObject(val)) {
-    updateVal = getPreparedValues(preparedValues, toJsonStr(val));
-  }
+  let updateVal = getFieldValue(
+    null,
+    val,
+    preparedValues,
+    groupByFields,
+    allowedFields,
+    { treatSimpleObjAsWhereSubQry: false, wrapArrInParenthesis: false }
+  );
+
   if (updateVal === null) {
     return null;
   }
@@ -44,15 +43,23 @@ export const nameParamFn = (
   val: Primitive | Primitive[] | Record<string, Primitive | Primitive[]>
 ) => {
   const callable = (options: CallableFieldParam) => {
-    const { preparedValues } = getValidCallableFieldValues(
-      options,
-      "preparedValues"
-    );
+    const { preparedValues, allowedFields, groupByFields } =
+      getValidCallableFieldValues(
+        options,
+        "preparedValues",
+        "groupByFields",
+        "allowedFields"
+      );
     name = dynamicFieldQuote(name, []);
     const value = attachArrayWith.noSpace([
       name,
       ":=",
-      prepareValForNamedParam(preparedValues, val),
+      prepareValForNamedParam(
+        preparedValues,
+        allowedFields,
+        groupByFields,
+        val
+      ),
     ]);
     return {
       col: value,

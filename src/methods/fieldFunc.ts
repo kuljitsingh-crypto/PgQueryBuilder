@@ -15,13 +15,16 @@ import {
   covertJSDataToSQLData,
   fieldQuote,
   getPreparedValues,
+  prepareSQLDataType,
   validCallableColCtx,
 } from "./helperFunction";
+import { toJsonStr } from "./jsonFunctionHelepr";
 import { QueryHelper } from "./queryHelper";
 import {
   attachArrayWith,
   isCallableColumn,
   isColAliasNameArr,
+  isNonEmptyObject,
   isNonEmptyString,
   isPrimitiveValue,
   isValidArray,
@@ -41,7 +44,8 @@ export type Arg<Model, P extends Primitive = Primitive> =
   | CallableField
   | CaseSubquery<Model>
   | WhereClause<Model>
-  | ArrayArg<P, Model>[];
+  | ArrayArg<P, Model>[]
+  | Record<string, any>;
 
 const prepareArrayData = (
   key: string | null,
@@ -49,15 +53,23 @@ const prepareArrayData = (
   preparedValues: PreparedValues,
   groupByFields: GroupByFields,
   allowedFields: AllowedFields,
+  wrapArrInParenthesis: boolean,
   type: string
 ) => {
-  const arrayKeyword = DB_KEYWORDS.array;
-  type = type || covertJSDataToSQLData(arr[0]);
-  const strArr = arr.map((a) =>
-    getFieldValue(key, a, preparedValues, groupByFields, allowedFields)
+  type = type ? `::${type}[]` : prepareSQLDataType(arr);
+  const arrVal = getPreparedValues(
+    preparedValues,
+    `{${attachArrayWith.coma(arr as any)}}`
   );
-  return `(${arrayKeyword}[${attachArrayWith.coma(strArr)}]::${type}[])`;
+  const finalVal = `${arrVal}${type}`;
+  return wrapArrInParenthesis
+    ? attachArrayWith.noSpace(["(", finalVal, ")"])
+    : finalVal;
 };
+const prepareObjectData = (val: object, preparedValues: PreparedValues) => {
+  return getPreparedValues(preparedValues, toJsonStr(val));
+};
+
 export const getFieldValue = <Model>(
   key: string | null,
   value: unknown,
@@ -74,6 +86,7 @@ export const getFieldValue = <Model>(
     treatSimpleObjAsWhereSubQry?: boolean;
     customArrayType?: string;
     wildcardColumn?: boolean;
+    wrapArrInParenthesis?: boolean;
   } = {}
 ): string | null => {
   const {
@@ -83,6 +96,7 @@ export const getFieldValue = <Model>(
     isFromCol = false,
     treatSimpleObjAsWhereSubQry = true,
     customArrayType = "",
+    wrapArrInParenthesis = false,
     ...callableOptions
   } = options;
   if (treatStrAsCol && isNonEmptyString(value)) {
@@ -152,7 +166,10 @@ export const getFieldValue = <Model>(
       allowedFields,
       options
     );
-  } else if (isValidWhereQuery(key, value, { treatSimpleObjAsWhereSubQry })) {
+  } else if (
+    treatSimpleObjAsWhereSubQry &&
+    isValidWhereQuery(key, value, { treatSimpleObjAsWhereSubQry })
+  ) {
     const query = TableFilter.prepareFilterStatement(
       allowedFields,
       groupByFields,
@@ -168,8 +185,11 @@ export const getFieldValue = <Model>(
       preparedValues,
       groupByFields,
       allowedFields,
+      wrapArrInParenthesis,
       customArrayType
     );
+  } else if (isNonEmptyObject(value)) {
+    return prepareObjectData(value, preparedValues);
   }
   return null;
 };
