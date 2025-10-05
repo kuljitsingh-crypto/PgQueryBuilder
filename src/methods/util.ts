@@ -14,6 +14,7 @@ import {
   SubqueryMultiColFlag,
   WhereClause,
 } from "../internalTypes";
+import { isValidInternalContext } from "./ctxHelper";
 import { symbolFuncRegister } from "./symbolHelper";
 
 const allowedWhereKeyWOrds = new Set([
@@ -130,9 +131,12 @@ export function isEmptyArray<T>(arr: unknown): arr is Array<T> {
 export function isValidFunction(func: unknown): func is Function {
   return typeof func === "function" && func.constructor === Function;
 }
+export function isString(str: unknown): str is string {
+  return typeof str === "string";
+}
 
 export function isNonEmptyString(str: unknown): str is string {
-  return typeof str === "string" && str.trim().length > 0;
+  return isString(str) && str.trim().length > 0;
 }
 
 export function isValidObject(obj: unknown): obj is object {
@@ -301,7 +305,11 @@ export const isNonEmptyObject = (obj: unknown): obj is object =>
   isValidObject(obj) && Object.keys(obj).length > 0;
 
 export const isCallableColumn = (col: unknown): col is CallableField => {
-  return typeof col === "function" && col.length === 1;
+  return (
+    typeof col === "function" &&
+    col.length === 1 &&
+    isValidInternalContext((col as any).ctx)
+  );
 };
 
 export const filterOutValidDbData =
@@ -371,3 +379,5 @@ export const resultHandler = (err?: any, data?: any) => {
     ...errorDataHandler(data),
   });
 };
+
+export const toPgStr = (val: Primitive) => `'${val}'`;

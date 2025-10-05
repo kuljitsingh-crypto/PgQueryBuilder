@@ -14,7 +14,7 @@ import {
   SetQueryArrField,
   Subquery,
 } from "../internalTypes";
-import { isValidInternalContext } from "./ctxHelper";
+import { getInternalContext, isValidInternalContext } from "./ctxHelper";
 import { throwError } from "./errorHelper";
 import { symbolFuncRegister } from "./symbolHelper";
 import {
@@ -23,6 +23,7 @@ import {
   isNonEmptyString,
   isNullableValue,
   isPrimitiveValue,
+  isString,
   isValidAggregateValue,
   isValidAllowedFields,
   isValidArray,
@@ -445,6 +446,7 @@ export const attachMethodToSymbolRegistry = (
     );
     return symbol;
   };
+  method.ctx = getInternalContext();
 };
 
 export const isFloatVal = (val: unknown): val is number => {
@@ -481,8 +483,31 @@ export const convertJSDataToSQLData = (
   return throwError.invalidDataType(data);
 };
 
-export const prepareSQLDataType = (data: unknown) =>
-  `::${convertJSDataToSQLData(data)}`;
+export const prepareSQLDataType = (
+  data: unknown,
+  options?: {
+    userType?: string;
+    throwErrOnInvalidDataType?: boolean;
+    isArr?: boolean;
+  }
+) => {
+  const {
+    userType,
+    throwErrOnInvalidDataType = true,
+    isArr = false,
+  } = options || {};
+  try {
+    return `::${convertJSDataToSQLData(data)}`;
+  } catch (err) {
+    if (isNonEmptyString(userType)) {
+      return `::${userType}${isArr ? "[]" : ""}`;
+    }
+    if (throwErrOnInvalidDataType) {
+      throw err;
+    }
+    return "";
+  }
+};
 
 //==================================== Field helper depend on object ============================//
 export const covertStrArrayToStr = (

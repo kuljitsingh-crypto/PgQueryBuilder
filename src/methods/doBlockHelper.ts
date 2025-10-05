@@ -1,7 +1,6 @@
 import { DB_KEYWORDS } from "../constants/dbkeywords";
 import { pgException } from "../constants/exceptions";
 import { supportedLang } from "../constants/language";
-import { simpleDataType } from "../constants/simpleDataTypes";
 import {
   AllowedFields,
   DOBlock,
@@ -39,10 +38,7 @@ const prepareVariable = (
         isNonEmptyString((val as any).type) &&
         !isUndefined((val as any).val);
       const type = isTypeVal
-        ? convertJSDataToSQLData(
-            (val as any).val,
-            (simpleDataType as any)[(val as any).type]
-          )
+        ? convertJSDataToSQLData((val as any).val, (val as any).type)
         : convertJSDataToSQLData(val);
       val = isTypeVal ? (val as any).val : val;
       const value = getFieldValue(

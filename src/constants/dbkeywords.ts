@@ -70,6 +70,10 @@ export const DB_KEYWORDS = {
   pgType: "pg_type",
   wildcard: "*",
   typeName: "typname",
+  table: "TABLE",
+  create: "CREATE",
+  replace: "REPLACE",
+  or: "OR",
 } as const;
 
 export const WHERE_KEYWORD = "where";

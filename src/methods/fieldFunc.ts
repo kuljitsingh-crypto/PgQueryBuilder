@@ -28,8 +28,10 @@ import {
   isPrimitiveValue,
   isValidArray,
   isValidCaseQuery,
+  isValidFunction,
   isValidSubQuery,
   isValidWhereQuery,
+  toPgStr,
 } from "./util";
 
 export type ArrayArg<P, Model> =
@@ -56,11 +58,11 @@ const prepareArrayData = (
   type: string,
   preparedValReq: boolean
 ) => {
-  type = type ? `::${type}[]` : prepareSQLDataType(arr);
+  type = prepareSQLDataType(arr, { userType: type, isArr: true });
   const rawVal = `{${attachArrayWith.coma(arr as any)}}`;
   const arrVal = preparedValReq
     ? getPreparedValues(preparedValues, rawVal)
-    : `'${rawVal}'`;
+    : toPgStr(rawVal);
   const finalVal = `${arrVal}${type}`;
   return wrapArrInParenthesis
     ? attachArrayWith.noSpace(["(", finalVal, ")"])
@@ -74,7 +76,7 @@ const prepareObjectData = (
   const rawVal = toJsonStr(val);
   const finalVal = preparedValReq
     ? getPreparedValues(preparedValues, rawVal)
-    : `'${rawVal}'`;
+    : toPgStr(rawVal);
   return finalVal;
 };
 
@@ -127,6 +129,8 @@ export const getFieldValue = <Model>(
       ...callableOptions,
     });
     return col;
+  } else if (isValidFunction(value)) {
+    return value();
   } else if (isValidCaseQuery(value, { treatSimpleObjAsWhereSubQry })) {
     const v = value as any;
     if (typeof v.else !== "undefined") {

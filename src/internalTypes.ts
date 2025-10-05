@@ -8,7 +8,6 @@ import {
   SUBQUERY_OP_KEYS,
 } from "./constants/operators";
 import { SetOperationType } from "./constants/setOperations";
-import { simpleDataType } from "./constants/simpleDataTypes";
 import { TableJoinType } from "./constants/tableJoin";
 import { Primitive } from "./globalTypes";
 
@@ -343,9 +342,7 @@ type DOBlockVar = Primitive | Primitive[] | CallableField | Record<string, any>;
 
 export type DOBlock = {
   variable?: {
-    [Key in string]:
-      | DOBlockVar
-      | { type: keyof typeof simpleDataType; val: DOBlockVar };
+    [Key in string]: DOBlockVar | { type: string; val: DOBlockVar };
   };
   onExceptions?: {
     [Key in keyof typeof pgException]?: string | null;

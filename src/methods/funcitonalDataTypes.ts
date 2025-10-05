@@ -1,7 +1,7 @@
 import { DB_KEYWORDS } from "../constants/dbkeywords";
 import { simpleDataType } from "../constants/simpleDataTypes";
 import { Primitive } from "../globalTypes";
-import { filterOutValidDbData, range } from "./util";
+import { attachArrayWith, filterOutValidDbData, range, toPgStr } from "./util";
 
 export const functionalDataType = {
   string(n: number): any {
@@ -24,11 +24,16 @@ export const functionalDataType = {
     return `${type} ${dimnStr}`;
   },
   enum(values: Primitive[]): any {
-    const valueStr = values
-      .filter(filterOutValidDbData())
-      .map((v) => `'${v}'`)
-      .join(",");
+    const valueStr = attachArrayWith.coma(
+      values.filter(filterOutValidDbData()).map(toPgStr)
+    );
     return `${DB_KEYWORDS.enum}(${valueStr})`;
+  },
+  table(rowConfig: Record<string, string>) {
+    const rows = Object.entries(rowConfig).map(([key, val]) =>
+      attachArrayWith.space([key, val])
+    );
+    return `${DB_KEYWORDS.table}(${attachArrayWith.coma(rows)})`;
   },
   custom(name: string): any {
     return name;

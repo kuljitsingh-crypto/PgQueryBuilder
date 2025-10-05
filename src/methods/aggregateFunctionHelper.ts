@@ -18,8 +18,10 @@ import { getInternalContext } from "./ctxHelper";
 import { throwError } from "./errorHelper";
 import { getFieldValue } from "./fieldFunc";
 import {
+  attachMethodToSymbolRegistry,
   getPreparedValues,
   getValidCallableFieldValues,
+  prepareSQLDataType,
 } from "./helperFunction";
 import { OrderByQuery } from "./orderBy";
 import {
@@ -179,6 +181,7 @@ const prepareAggrCol =
   (col: AggrCol<Model>) => {
     const updatedCol = getUpdatedColumnAndCustomAllowedFields(col, fn);
     col = updatedCol.column;
+    const type = prepareSQLDataType(col, { throwErrOnInvalidDataType: false });
     const val = getFieldValue(
       fn,
       col,
@@ -190,7 +193,7 @@ const prepareAggrCol =
         refAllowedFields: allowedFields,
       }
     );
-    return val;
+    return attachArrayWith.noSpace([val, type]);
   };
 
 class AggregateFunction {
@@ -208,7 +211,7 @@ class AggregateFunction {
     fn: AggregateFunctionType,
     options: Options<Model>
   ) {
-    return (fieldOptions: CallableFieldParam) => {
+    const callable = (fieldOptions: CallableFieldParam) => {
       const { preparedValues, groupByFields, allowedFields } =
         getValidCallableFieldValues(
           fieldOptions,
@@ -228,6 +231,8 @@ class AggregateFunction {
         ctx: getInternalContext(),
       };
     };
+    attachMethodToSymbolRegistry(callable, "aggrFn");
+    return callable;
   }
 
   #aggregateFunc<Model>(fn: AggregateFunctionType) {

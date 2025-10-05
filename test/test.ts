@@ -814,12 +814,13 @@ Company.select(
       // fn.custom({ name: 'ROUND' }, 4.67345, 2),
       // fn.not(false),
       // fn.slice([1, 2, 3], 2, 3),
-      fn.custom(
-        { name: "greet2" },
-        fn.namedParam("name_k", [3]),
-        fn.namedParam("initial", "2")
-      ),
+      // fn.custom(
+      //   { name: "greet2" },
+      //   fn.namedParam("name_k", [3]),
+      //   fn.namedParam("initial", "2")
+      // ),
       // fn.add(1, 2),
+      fn.count(),
     ],
     // where: { id: 1 },
     where: {
@@ -964,7 +965,7 @@ fn.doBlock
   .run({
     body: "RAISE NOTICE 'x = %',x;", //"CREATE EXTENSION  hstore; ",
     onExceptions: { duplicateObject: null },
-    variable: { x: { type: "uuid", val: fn.randomUUID() } },
+    variable: { x: { type: PgDataType.uuid, val: fn.randomUUID() } },
     showQuery: true,
   })
   .then((res) => {

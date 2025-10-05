@@ -15,9 +15,8 @@ import {
   isPrimitiveValue,
   prepareEnumField,
   resultHandler,
+  toPgStr,
 } from "./util";
-
-const toStr = (val: Primitive) => `'${val}'`;
 
 export class UserDefinedType {
   async create(params: {
@@ -151,12 +150,12 @@ export class UserDefinedType {
         DB_KEYWORDS.alterType,
         name,
         DB_KEYWORDS.addValue,
-        toStr(newValue),
+        toPgStr(newValue),
       ];
       if (isPrimitiveValue(beforeValue)) {
-        queries.push(DB_KEYWORDS.before, toStr(beforeValue));
+        queries.push(DB_KEYWORDS.before, toPgStr(beforeValue));
       } else if (isPrimitiveValue(afterValue)) {
-        queries.push(DB_KEYWORDS.after, toStr(afterValue));
+        queries.push(DB_KEYWORDS.after, toPgStr(afterValue));
       }
       const qry = appendWithSemicolon(attachArrayWith.space(queries));
       await pgConnect.connection.query({

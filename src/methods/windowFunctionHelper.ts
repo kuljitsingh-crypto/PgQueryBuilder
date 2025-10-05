@@ -162,10 +162,10 @@ class FrameFunction {
 
   #attachMethods = <T extends FrameFunctionKeys>(methodName: T) => {
     return (
-        preceding: "UNBOUNDED" | number | CallableField,
-        following: "UNBOUNDED" | "CURRENT ROW" | number | CallableField
-      ) =>
-      (options: CallableFieldParam) => {
+      preceding: "UNBOUNDED" | number | CallableField,
+      following: "UNBOUNDED" | "CURRENT ROW" | number | CallableField
+    ) => {
+      const callable = (options: CallableFieldParam) => {
         const method = frameFunction[methodName];
         if (!method) {
           return throwError.invalidFrameFunction(methodName);
@@ -203,6 +203,9 @@ class FrameFunction {
         ]);
         return { col, alias: null, ctx: getInternalContext() };
       };
+      attachMethodToSymbolRegistry(callable, "frameFn");
+      return callable;
+    };
   };
 
   #initializeMethods() {

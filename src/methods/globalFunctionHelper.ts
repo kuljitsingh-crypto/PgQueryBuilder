@@ -1,5 +1,6 @@
 import { DB_KEYWORDS } from "../constants/dbkeywords";
 import { UserDefined } from "../constants/userDefinedType";
+import { Primitive } from "../globalTypes";
 import { aggregateFn } from "./aggregateFunctionHelper";
 import { arrayFn } from "./arrayFunctionHelepr";
 import { colFn } from "./columnFunctionHelepr";
@@ -11,6 +12,7 @@ import { JPathBuilder } from "./jsonQueryBuilder";
 import { nameParamFn } from "./namedParamFunctionHelper";
 import { typeCastFn } from "./typeCastHelper";
 import { UserDefinedType } from "./userDefinedType";
+import { attachArrayWith, toPgStr } from "./util";
 import { frameFn, windowFn } from "./windowFunctionHelper";
 
 type AggrKeys = keyof typeof aggregateFn;
@@ -94,8 +96,12 @@ class GlobalFunction {
     const jPathBuilder = new JPathBuilder(root);
     return jPathBuilder;
   }
-  raiseNotice(msg: string) {
-    return `${DB_KEYWORDS.raiseNotice} '${msg}'`;
+  raiseNotice(msg: string, ...params: Primitive[]) {
+    return attachArrayWith.space([
+      DB_KEYWORDS.raiseNotice,
+      toPgStr(msg),
+      attachArrayWith.coma(params),
+    ]);
   }
   namedParam(
     ...args: Parameters<typeof nameParamFn>
