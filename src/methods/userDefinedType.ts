@@ -4,7 +4,6 @@ import { Primitive } from "../globalTypes";
 import { PreparedValues } from "../internalTypes";
 import { doHelper } from "./doBlockHelper";
 import { getPreparedValues } from "./helperFunction";
-import { toJsonStr } from "./jsonFunctionHelepr";
 import { pgConnect } from "./pgHelper";
 import {
   appendWithSemicolon,
@@ -13,26 +12,12 @@ import {
   isEnumDataType,
   isNonEmptyObject,
   isNonEmptyString,
-  isNonNullableValue,
-  isNullableValue,
   isPrimitiveValue,
   prepareEnumField,
+  resultHandler,
 } from "./util";
 
 const toStr = (val: Primitive) => `'${val}'`;
-
-const statusHandler = (err?: any, data?: any) => {
-  if (isNullableValue(err)) {
-    const dataMaybe = isNonNullableValue(data) ? { result: data } : {};
-    return { status: DB_KEYWORDS.success, ...dataMaybe };
-  }
-  const dataMaybe = isNonNullableValue(data) ? { query: data } : {};
-  return Promise.reject({
-    status: DB_KEYWORDS.failed,
-    reason: err.message,
-    ...dataMaybe,
-  });
-};
 
 export class UserDefinedType {
   async create(params: {
@@ -49,7 +34,7 @@ export class UserDefinedType {
       if (isNonEmptyString(type)) {
         const query = buildCreateQry(name, type);
         await pgConnect.connection.query({ query, showQuery });
-        return statusHandler();
+        return resultHandler();
       }
       if (isNonEmptyObject(type)) {
         Object.entries(type).forEach(([key, field]) => {
@@ -75,15 +60,15 @@ export class UserDefinedType {
           ...exceptionMaybe,
           showQuery,
         });
-        return statusHandler();
+        return resultHandler();
       }
-      return statusHandler();
+      return resultHandler();
     } catch (err) {
-      return statusHandler(err);
+      return resultHandler(err);
     }
   }
 
-  async getType(param: { name: string; showQuery?: boolean }) {
+  async get(param: { name: string; showQuery?: boolean }) {
     try {
       const { name, showQuery } = param;
       const preparedValues: PreparedValues = { values: [], index: 0 };
@@ -105,13 +90,13 @@ export class UserDefinedType {
         showQuery,
         params: preparedValues.values,
       });
-      return statusHandler(null, resp.rows[0]);
+      return resultHandler(null, resp.rows);
     } catch (err) {
-      return statusHandler(err);
+      return resultHandler(err);
     }
   }
 
-  async dropType(param: {
+  async drop(param: {
     name: string;
     type: Extract<
       (typeof foreignKeyActions)[keyof typeof foreignKeyActions],
@@ -125,9 +110,9 @@ export class UserDefinedType {
         attachArrayWith.space([DB_KEYWORDS.dropType, name, type])
       );
       await pgConnect.connection.query({ query: qry, showQuery });
-      return statusHandler();
+      return resultHandler();
     } catch (err) {
-      return statusHandler(err);
+      return resultHandler(err);
     }
   }
 
@@ -147,9 +132,9 @@ export class UserDefinedType {
         ])
       );
       await pgConnect.connection.query({ query: qry, showQuery });
-      return statusHandler();
+      return resultHandler();
     } catch (err) {
-      return statusHandler(err);
+      return resultHandler(err);
     }
   }
 
@@ -178,9 +163,9 @@ export class UserDefinedType {
         query: qry,
         showQuery,
       });
-      return statusHandler();
+      return resultHandler();
     } catch (err) {
-      return statusHandler(err);
+      return resultHandler(err);
     }
   }
 
@@ -209,13 +194,13 @@ export class UserDefinedType {
       ];
       const qry = appendWithSemicolon(attachArrayWith.space(queries));
       await pgConnect.connection.query({ query: qry, showQuery });
-      return statusHandler();
+      return resultHandler();
     } catch (err) {
-      return statusHandler(err);
+      return resultHandler(err);
     }
   }
 
-  async renameType(params: {
+  async rename(params: {
     oldName: string;
     newName: string;
     showQuery?: boolean;
@@ -231,9 +216,9 @@ export class UserDefinedType {
       ];
       const qry = appendWithSemicolon(attachArrayWith.space(queries));
       await pgConnect.connection.query({ query: qry, showQuery });
-      return statusHandler();
+      return resultHandler();
     } catch (err) {
-      return statusHandler(err);
+      return resultHandler(err);
     }
   }
 
@@ -256,9 +241,9 @@ export class UserDefinedType {
       ];
       const qry = appendWithSemicolon(attachArrayWith.space(queries));
       await pgConnect.connection.query({ query: qry, showQuery });
-      return statusHandler();
+      return resultHandler();
     } catch (err) {
-      return statusHandler(err);
+      return resultHandler(err);
     }
   }
 
@@ -281,9 +266,9 @@ export class UserDefinedType {
       ];
       const qry = appendWithSemicolon(attachArrayWith.space(queries));
       await pgConnect.connection.query({ query: qry, showQuery });
-      return statusHandler();
+      return resultHandler();
     } catch (err) {
-      return statusHandler(err);
+      return resultHandler(err);
     }
   }
 
@@ -303,9 +288,9 @@ export class UserDefinedType {
       ];
       const qry = appendWithSemicolon(attachArrayWith.space(queries));
       await pgConnect.connection.query({ query: qry, showQuery });
-      return statusHandler();
+      return resultHandler();
     } catch (err) {
-      return statusHandler(err);
+      return resultHandler(err);
     }
   }
 
@@ -325,9 +310,9 @@ export class UserDefinedType {
       ];
       const qry = appendWithSemicolon(attachArrayWith.space(queries));
       await pgConnect.connection.query({ query: qry, showQuery });
-      return statusHandler();
+      return resultHandler();
     } catch (err) {
-      return statusHandler(err);
+      return resultHandler(err);
     }
   }
   async setCollation(params: {
@@ -347,9 +332,9 @@ export class UserDefinedType {
       ];
       const qry = appendWithSemicolon(attachArrayWith.space(queries));
       await pgConnect.connection.query({ query: qry, showQuery });
-      return statusHandler();
+      return resultHandler();
     } catch (err) {
-      return statusHandler(err);
+      return resultHandler(err);
     }
   }
 
@@ -370,9 +355,9 @@ export class UserDefinedType {
       ];
       const qry = appendWithSemicolon(attachArrayWith.space(queries));
       await pgConnect.connection.query({ query: qry, showQuery });
-      return statusHandler();
+      return resultHandler();
     } catch (err) {
-      return statusHandler(err);
+      return resultHandler(err);
     }
   }
 
@@ -394,9 +379,9 @@ export class UserDefinedType {
       ];
       const qry = appendWithSemicolon(attachArrayWith.space(queries));
       await pgConnect.connection.query({ query: qry, showQuery });
-      return statusHandler();
+      return resultHandler();
     } catch (err) {
-      return statusHandler(err);
+      return resultHandler(err);
     }
   }
 }

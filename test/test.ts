@@ -843,9 +843,11 @@ Company.select(
     },
   },
   { showQuery: true }
-).then((res) => {
-  console.dir({ " Query Result->": res }, { depth: null });
-});
+)
+  .then((res) => {
+    console.dir({ " Query Result->": res }, { depth: null });
+  })
+  .catch(console.log);
 
 // PgQueryBuilder.rawQuery(
 //   "SELECT * FROM information_schema.columns Where table_name = 'companies'"
@@ -886,14 +888,14 @@ Company.select(
 
 //SELECT * FROM (((SELECT * FROM basket_a AS t UNION ALL (SELECT * FROM basket_c)) INTERSECT (SELECT * FROM basket_d)INTERSECT (SELECT * FROM basket_e))) AS results WHERE (a = $1)
 
-// fn.customDataType.create({
+// fn.pgCustom.type.create({
 //   name: "test2",
 //   type: { id: PgDataType.int, enum_test: PgDataType.enum(["1", "2", "4"]) },
 //   ignoreIfExists: true,
 //   showQuery: true,
 // });
 
-// fn.customDataType
+// fn.pgCustom.type
 //   .create({
 //     name: "enummmm",
 //     type: PgDataType.enum(["1", "2", "4"]),
@@ -903,11 +905,11 @@ Company.select(
 //   .then(console.log)
 //   .catch(console.log);
 
-// fn.customDataType
+// fn.pgCustom.type
 //   .addValue({ showQuery: true, name: "enummmm", newValue: true })
 //   .then(console.log);
 
-// fn.customDataType
+// fn.pgCustom.type
 //   .addAttr({
 //     name: "test2",
 //     attrName: "newAttr2",
@@ -916,8 +918,8 @@ Company.select(
 //   })
 //   .then(console.log);
 
-// fn.customDataType
-//   .dropType({
+// fn.pgCustom.type
+//   .drop({
 //     name: "test2",
 //     type: "CASCADE",
 //     showQuery: true,
@@ -927,8 +929,8 @@ Company.select(
 //     console.log("err", err);
 //   });
 
-// fn.customDataType
-//   .renameType({
+// fn.pgCustom.type
+//   .rename({
 //     oldName: "test",
 //     newName: "testy",
 //     showQuery: true,
@@ -936,7 +938,7 @@ Company.select(
 //   .then(console.log)
 //   .catch(console.log);
 
-// fn.customDataType
+// fn.pgCustom.type
 //   .renameAttr({
 //     name: "testy",
 //     oldAttrName: "id",
@@ -946,9 +948,9 @@ Company.select(
 //   .then(console.log)
 //   .catch(console.log);
 
-// fn.customDataType
-//   .getType({
-//     name: "testy",
+// fn.pgCustom.type
+//   .get({
+//     name: "enummm",
 //     showQuery: true,
 //   })
 //   .then(console.log)

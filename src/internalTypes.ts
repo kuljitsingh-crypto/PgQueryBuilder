@@ -1,6 +1,5 @@
 import { DB_KEYWORDS_TYPE } from "./constants/dbkeywords";
 import { pgException } from "./constants/exceptions";
-import { Reference } from "./constants/foreignkeyActions";
 import { supportedLang } from "./constants/language";
 import {
   ARRAY_OP_KEYS,

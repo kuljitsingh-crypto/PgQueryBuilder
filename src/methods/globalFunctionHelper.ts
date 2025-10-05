@@ -1,4 +1,5 @@
 import { DB_KEYWORDS } from "../constants/dbkeywords";
+import { UserDefined } from "../constants/userDefinedType";
 import { aggregateFn } from "./aggregateFunctionHelper";
 import { arrayFn } from "./arrayFunctionHelepr";
 import { colFn } from "./columnFunctionHelepr";
@@ -26,7 +27,7 @@ interface GlobalFunction extends Func {
   cast: typeof typeCastFn;
   window: typeof windowFn;
   doBlock: typeof doHelper;
-  customDataType: UserDefinedType;
+  pgCustom: UserDefined;
 }
 
 class GlobalFunction {
@@ -38,7 +39,9 @@ class GlobalFunction {
       this.cast = typeCastFn;
       this.window = windowFn;
       this.doBlock = doHelper;
-      this.customDataType = new UserDefinedType();
+      this.pgCustom = Object.freeze({
+        type: new UserDefinedType(),
+      });
       this.#attachAggregateFunctions();
       this.#attachFrameFunctions();
       this.#attachFieldFunctions();

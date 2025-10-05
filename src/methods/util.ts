@@ -24,6 +24,16 @@ const allowedWhereKeyWOrds = new Set([
   "$matches",
 ]);
 
+const errorDataHandler = (data: any) => {
+  if (isNullableValue(data)) {
+    return { query: null };
+  }
+  if (data.query && data.params) {
+    return { query: data.query, params: data.params };
+  }
+  return { query: data };
+};
+
 const attachArrayWithSep = (
   array: Array<Primitive>,
   sep: string,
@@ -133,10 +143,13 @@ export function isValidSetObj<T>(obj: unknown): obj is Set<T> {
   return typeof obj === "object" && obj !== null && obj.constructor === Set;
 }
 
-export const isNonNullableValue = <T>(v: T): v is NonNullable<T> =>
-  v !== null && v !== undefined;
+export function isNonNullableValue<T>(v: T): v is NonNullable<T> {
+  return v !== null && v !== undefined;
+}
 
-export const isNullableValue = (v: unknown): v is Nullable => v == null;
+export function isNullableValue(v: unknown): v is Nullable {
+  return v == null;
+}
 export const isPrimitiveValue = (value: unknown): value is Primitive => {
   return (
     typeof value === "string" ||
@@ -343,4 +356,18 @@ export const buildCreateQry = (name: string, type: string) => {
   return appendWithSemicolon(
     attachArrayWith.space([DB_KEYWORDS.createType, name, DB_KEYWORDS.as, type])
   );
+};
+
+export const resultHandler = (err?: any, data?: any) => {
+  if (isNullableValue(err)) {
+    const dataMaybe = isNonNullableValue(data)
+      ? { results: data, resultCount: isValidArray(data) ? data.length : 0 }
+      : { results: [], resultCount: 0 };
+    return { success: true, ...dataMaybe };
+  }
+  return Promise.reject({
+    success: false,
+    reason: err.message,
+    ...errorDataHandler(data),
+  });
 };

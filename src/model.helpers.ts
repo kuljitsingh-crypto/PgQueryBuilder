@@ -23,8 +23,7 @@ import {
 } from "./methods/helperFunction";
 import { pgConnect } from "./methods/pgHelper";
 import { QueryHelper } from "./methods/queryHelper";
-import { RawQueryHandler } from "./methods/rawQueryHelper";
-import { attachArrayWith } from "./methods/util";
+import { attachArrayWith, resultHandler } from "./methods/util";
 
 //============================================= CONSTANTS ===================================================//
 const enumQryPrefix = `DO $$ BEGIN CREATE TYPE`;
@@ -56,9 +55,12 @@ export class DBQuery {
         params: preparedValues.values,
         showQuery,
       });
-      return { rows: result.rows, count: result.rowCount };
+      return resultHandler(null, result.rows);
     } catch (error) {
-      return errorHandler(findAllQuery, preparedValues.values, error as Error);
+      return resultHandler(error, {
+        query: findAllQuery,
+        params: preparedValues.values,
+      });
     }
   }
 
