@@ -25,7 +25,10 @@ const prepareValForNamedParam = (
   if (isPrimitiveValue(val)) {
     updateVal = getPreparedValues(preparedValues, val);
   } else if (isValidArray(val)) {
-    updateVal = `{${attachArrayWith.coma(val as any)}}`;
+    updateVal = getPreparedValues(
+      preparedValues,
+      `{${attachArrayWith.coma(val as any)}}`
+    );
   } else if (isNonEmptyObject(val)) {
     updateVal = getPreparedValues(preparedValues, toJsonStr(val));
   }
@@ -36,7 +39,10 @@ const prepareValForNamedParam = (
   return attachArrayWith.noSpace([updateVal, type]);
 };
 
-export const nameParamFn = (name: string, val: Primitive | Primitive[]) => {
+export const nameParamFn = (
+  name: string,
+  val: Primitive | Primitive[] | Record<string, Primitive | Primitive[]>
+) => {
   const callable = (options: CallableFieldParam) => {
     const { preparedValues } = getValidCallableFieldValues(
       options,
