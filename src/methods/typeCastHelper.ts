@@ -1,6 +1,7 @@
 import {
   allowedIntervalFields,
   AllowedIntervalFields,
+  customTypeCast,
   fieldsParamTypeCast,
   intervalFieldsWithPrecision,
   lengthParamTypeCast,
@@ -26,6 +27,8 @@ type ParamValue = {
   precision: number;
   scale: number;
   field: AllowedIntervalFields;
+  fnParams: Primitive[];
+  fnName: string;
 };
 
 type TypeCastRefVal = { value: string; paramAllowed: (keyof ParamValue)[] };
@@ -46,6 +49,8 @@ const castOptionType: Record<keyof ParamValue, any> = {
   precision: "number",
   scale: "number",
   field: allowedIntervalFields,
+  fnParams: "object",
+  fnName: "string",
 };
 
 const prepareCastObj = <T extends TypeCastKeys>(
@@ -71,7 +76,7 @@ const getValidTypeValue = (
     typeof val === allowedType ? (val as string) : "";
   let wrapFieldParamWithBracket = true,
     i = 0;
-  const arr: string[] = [];
+  const arr: Primitive[] = [];
   for (; i < paramAllowed.length; i++) {
     const acc = paramAllowed[i];
     const val = (castOptions as any)[acc];
@@ -84,6 +89,9 @@ const getValidTypeValue = (
         intervalFieldsWithPrecision.includes(val) &&
         getPrimitiveValidValue(nextVal, castOptionType["precision"]);
       arr.push(`${val}${precision ? "(" + precision + ")" : ""}`);
+      break;
+    } else if (isValidArray(val) && typeof val === allowedType) {
+      arr.push(...(val as any));
       break;
     } else if (typeof val === allowedType) {
       arr.push(getPrimitiveValidValue(val, allowedType));
@@ -109,6 +117,7 @@ class TypeCast {
         ...prepareCastObj(precisionParamTypeCast, "precision"),
         ...prepareCastObj(precisionAndScaleParamTypeCast, "precision", "scale"),
         ...prepareCastObj(fieldsParamTypeCast, "field", "precision"),
+        ...prepareCastObj(customTypeCast, "fnParams"),
       };
       this.#attachMethods(methodKeyRef);
     }
@@ -129,7 +138,11 @@ class TypeCast {
 
         const prepareType = () => {
           const v = getValidTypeValue(paramAllowed, castOptions);
-          return attachArrayWith.customSep(["::", fnName, v], "");
+          const updatedFnName =
+            fnName === customTypeCast.custom
+              ? castOptions?.fnName || ""
+              : fnName;
+          return attachArrayWith.noSpace(["::", updatedFnName, v]);
         };
         const type = prepareType();
         let col: string | null = null;

@@ -714,129 +714,134 @@ Order.init(
 //   console.dir({ ' Query Result->': res }, { depth: null });
 // });
 
-// Company.select({
-//   columns: [
-//     // fn.jsonbSet(fn.col('data'), fn.jPath(['age']), 35),
-//     // fn.jsonbSet(
-//     //   fn.col('data'),
-//     //   fn.jPath(['address', 'country']),
-//     //   fn.toJsonStr('india'),
-//     //   true,
-//     // ),
-//     // fn.arrayToJson(
-//     //   fn.array([fn.add(fn.cast.int(1), 32), 2, 3], { type: PgDataType.int }),
-//     // ),
-//     // fn.jsonConcat(fn.col('data'), fn.toJsonStr({ country: 'USA' })),
-//     // fn.jsonbPathQuery(
-//     //   fn.col('data'),
-//     //   fn
-//     //     .jQuery()
-//     //     .start()
-//     //     .key('skills')
-//     //     .at(0)
-//     //     .end()
-//     //     .and()
-//     //     .start()
-//     //     .key('age')
-//     //     .end()
-//     //     .build(),
-//     // ),
-//     // fn.jsonbPathQuery(fn.col('info'), fn.jQuery().s.build()),
-//     // fn.jsonbPathQueryArray(
-//     //   fn.col('data'),
-//     //   fn
-//     //     .jQuery()
-//     //     // .key('department')
-//     //     // .eq('IT')
-//     //     // .and()
-//     //     // .key('salary')
-//     //     // .gte(75000)
-//     //     // .startGrp(null)
-//     //     // .key('age')
-//     //     // .gt(30)
-//     //     // .endGrp()
-//     //     // .or()
-//     //     // .startGrp(null)
-//     //     // .key('salary')
-//     //     // .lt(50000)
-//     //     // .endGrp()
-//     //     .startCtx('skills', '*')
-//     //     .likeRegex('^J')
-//     //     .endCtx()
-//     //     // .keyvalue()
-//     //     // .asKey()
-//     //     // .startCtx('$')
-//     //     // .startGrp()
-//     //     // .key('salary')
-//     //     // .gt(65000)
-//     //     // .and()
-//     //     // .key('salary')
-//     //     // .lte(75000)
-//     //     // .endGrp()
-//     //     // .or()
-//     //     // .key('age')
-//     //     // .eq(28)
-//     //     // .endGrp()
-//     //     // .endCtx()
-//     //     // .or()
-//     //     // .startCtx('age')
-//     //     // .eq(28)
-//     //     // .endCtx()
-//     //     // .endGrp()
-//     //     // .not()
-//     //     // .startGrp(null)
-//     //     // .startGrp('salary')
-//     //     // .lt(75000)
-//     //     // .and()
-//     //     // .key('salary')
-//     //     // .gt(60000)
-//     //     // .endGrp()
-//     //     // .or()
-//     //     // .startGrp('age')
-//     //     // .gt(20)
-//     //     // .endGrp()
-//     //     // .endGrp()
-//     //     .build(),
-//     // ),
-//     // fn.custom({ name: 'va', isCallableOp: false }, 2, 3),
-//     // fn.custom({ name: 'va', isCallableOp: false }, 2, 3),
-//     // fn.add(fn.cast.int(1), 2),
-//     // fn.custom(
-//     //   { name: 'AND', callable: false, attachMode: 'operatorBetween' },
-//     //   fn.cast.boolean(true),
-//     //   false,
-//     // ),
-//     // fn.custom({ name: 'ROUND' }, 4.67345, 2),
-//     // fn.not(false),
-//     // fn.slice([1, 2, 3], 2, 3),
-//   ],
-//   // where: { id: 1 },
-//   where: {
-//     // data: {
-//     //   jsonbMatch: fn
-//     //     .jQuery()
-//     //     .not()
-//     //     .start()
-//     //     .key('age')
-//     //     .gt(25)
-//     //     .and()
-//     //     .key('age')
-//     //     .lt(35)
-//     //     .end()
-//     //     .build(),
-//     // jsonbMatch: fn
-//     //   .jQuery()
-//     //   .key('salary')
-//     //   .filterStart()
-//     //   .in([65000, 75000])
-//     //   .filterEnd()
-//     //   .build(),
-//     // jsonbMatch: fn.jQuery().key('skills').at(0).neq('Python').build(),
-//     // },
-//   },
-// }).then((res) => {
-//   console.dir({ ' Query Result->': res }, { depth: null });
-// });
+Company.select(
+  {
+    columns: [
+      // fn.jsonbSet(fn.col('data'), fn.jPath(['age']), 35),
+      // fn.jsonbSet(
+      //   fn.col('data'),
+      //   fn.jPath(['address', 'country']),
+      //   fn.toJsonStr('india'),
+      //   true,
+      // ),
+      // fn.arrayToJson(
+      //   fn.array([fn.add(fn.cast.int(1), 32), 2, 3], { type: PgDataType.int }),
+      // ),
+      // fn.jsonConcat(fn.col('data'), fn.toJsonStr({ country: 'USA' })),
+      // fn.jsonbPathQuery(
+      //   fn.col('data'),
+      //   fn
+      //     .jQuery()
+      //     .start()
+      //     .key('skills')
+      //     .at(0)
+      //     .end()
+      //     .and()
+      //     .start()
+      //     .key('age')
+      //     .end()
+      //     .build(),
+      // ),
+      // fn.jsonbPathQuery(fn.col('info'), fn.jQuery().s.build()),
+      // fn.jsonbPathQueryArray(
+      //   fn.col('data'),
+      //   fn
+      //     .jQuery()
+      //     // .key('department')
+      //     // .eq('IT')
+      //     // .and()
+      //     // .key('salary')
+      //     // .gte(75000)
+      //     // .startGrp(null)
+      //     // .key('age')
+      //     // .gt(30)
+      //     // .endGrp()
+      //     // .or()
+      //     // .startGrp(null)
+      //     // .key('salary')
+      //     // .lt(50000)
+      //     // .endGrp()
+      //     .startCtx('skills', '*')
+      //     .likeRegex('^J')
+      //     .endCtx()
+      //     // .keyvalue()
+      //     // .asKey()
+      //     // .startCtx('$')
+      //     // .startGrp()
+      //     // .key('salary')
+      //     // .gt(65000)
+      //     // .and()
+      //     // .key('salary')
+      //     // .lte(75000)
+      //     // .endGrp()
+      //     // .or()
+      //     // .key('age')
+      //     // .eq(28)
+      //     // .endGrp()
+      //     // .endCtx()
+      //     // .or()
+      //     // .startCtx('age')
+      //     // .eq(28)
+      //     // .endCtx()
+      //     // .endGrp()
+      //     // .not()
+      //     // .startGrp(null)
+      //     // .startGrp('salary')
+      //     // .lt(75000)
+      //     // .and()
+      //     // .key('salary')
+      //     // .gt(60000)
+      //     // .endGrp()
+      //     // .or()
+      //     // .startGrp('age')
+      //     // .gt(20)
+      //     // .endGrp()
+      //     // .endGrp()
+      //     .build(),
+      // ),
+      // fn.custom({ name: 'va', isCallableOp: false }, 2, 3),
+      // fn.custom({ name: 'va', isCallableOp: false }, 2, 3),
+      // fn.add(fn.cast.int(1), 2),
+      // fn.custom(
+      //   { name: 'AND', callable: false, attachMode: 'operatorBetween' },
+      //   fn.cast.boolean(true),
+      //   false,
+      // ),
+      // fn.custom({ name: 'ROUND' }, 4.67345, 2),
+      // fn.not(false),
+      // fn.slice([1, 2, 3], 2, 3),
+      fn.custom({ name: "greet2" }, fn.namedParam("name_k", "3")),
+      // fn.add(1, 2),
+    ],
+    // where: { id: 1 },
+    where: {
+      // data: {
+      //   jsonbMatch: fn
+      //     .jQuery()
+      //     .not()
+      //     .start()
+      //     .key('age')
+      //     .gt(25)
+      //     .and()
+      //     .key('age')
+      //     .lt(35)
+      //     .end()
+      //     .build(),
+      // jsonbMatch: fn
+      //   .jQuery()
+      //   .key('salary')
+      //   .filterStart()
+      //   .in([65000, 75000])
+      //   .filterEnd()
+      //   .build(),
+      // jsonbMatch: fn.jQuery().key('skills').at(0).neq('Python').build(),
+      // },
+    },
+  },
+  { showQuery: true }
+).then((res) => {
+  console.dir({ " Query Result->": res }, { depth: null });
+});
 
 // PgQueryBuilder.rawQuery(
 //   "SELECT * FROM information_schema.columns Where table_name = 'companies'"
@@ -914,7 +919,9 @@ Order.init(
 //     showQuery: true,
 //   })
 //   .then(console.log)
-//   .catch(console.log);
+//   .catch((err) => {
+//     console.log("err", err);
+//   });
 
 // fn.customDataType
 //   .renameType({

@@ -431,6 +431,7 @@ const opGroups: OpGroup[] = [
     set: CUSTOM_FIELD_OP,
     type: "multiple",
     attachMode: "custom",
+    zeroArgAllowed: true,
   },
 ] as const;
 

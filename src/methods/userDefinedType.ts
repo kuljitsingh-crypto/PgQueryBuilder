@@ -23,11 +23,15 @@ const toStr = (val: Primitive) => `'${val}'`;
 
 const statusHandler = (err?: any, data?: any) => {
   if (isNullableValue(err)) {
-    const dataMaybe = isNonNullableValue(data) ? { data } : {};
+    const dataMaybe = isNonNullableValue(data) ? { result: data } : {};
     return { status: DB_KEYWORDS.success, ...dataMaybe };
   }
-  const msg = toJsonStr({ status: DB_KEYWORDS.failed, reason: err.message });
-  throw new Error(msg);
+  const dataMaybe = isNonNullableValue(data) ? { query: data } : {};
+  return Promise.reject({
+    status: DB_KEYWORDS.failed,
+    reason: err.message,
+    ...dataMaybe,
+  });
 };
 
 export class UserDefinedType {

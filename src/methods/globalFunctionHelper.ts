@@ -7,6 +7,7 @@ import { fieldFn } from "./fieldFunctionHelper";
 import { fromJsonStr, toJsonStr } from "./jsonFunctionHelepr";
 import { jsonPathFn } from "./jsonPathHelper";
 import { JPathBuilder } from "./jsonQueryBuilder";
+import { nameParamFn } from "./namedParamFunctionHelper";
 import { typeCastFn } from "./typeCastHelper";
 import { UserDefinedType } from "./userDefinedType";
 import { frameFn, windowFn } from "./windowFunctionHelper";
@@ -92,6 +93,11 @@ class GlobalFunction {
   }
   raiseNotice(msg: string) {
     return `${DB_KEYWORDS.raiseNotice} '${msg}'`;
+  }
+  namedParam(
+    ...args: Parameters<typeof nameParamFn>
+  ): ReturnType<typeof nameParamFn> {
+    return nameParamFn(...args);
   }
 }
 

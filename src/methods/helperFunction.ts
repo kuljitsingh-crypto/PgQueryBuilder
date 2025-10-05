@@ -19,7 +19,7 @@ import { throwError } from "./errorHelper";
 import { symbolFuncRegister } from "./symbolHelper";
 import {
   attachArrayWith,
-  filterOutValidDbData,
+  isNonEmptyObject,
   isNonEmptyString,
   isNullableValue,
   isPrimitiveValue,
@@ -470,11 +470,13 @@ export const covertJSDataToSQLData = (data: unknown): string => {
     return PgDataType.int;
   } else if (isValidArray(data)) {
     return `${covertJSDataToSQLData(data[0])}[]`;
+  } else if (isNonEmptyObject(data)) {
+    return PgDataType.jsonb;
   }
   return throwError.invalidDataType(data);
 };
 
-export const prepareSQLDataType = (data: Primitive) =>
+export const prepareSQLDataType = (data: unknown) =>
   `::${covertJSDataToSQLData(data)}`;
 
 //==================================== Field helper depend on object ============================//
