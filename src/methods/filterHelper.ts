@@ -24,7 +24,7 @@ import {
 import { ColumnHelper } from "./columnHelper";
 import { throwError } from "./errorHelper";
 import {
-  covertJSDataToSQLData,
+  convertJSDataToSQLData,
   getAllEntries,
   getPreparedValues,
   prepareSQLDataType,
@@ -103,7 +103,7 @@ const prepareQryForPrimitiveOp = (
 };
 
 const getArrayDataType = (value: Primitive[]) =>
-  covertJSDataToSQLData(value[0]);
+  convertJSDataToSQLData(value[0]);
 
 const getAnyAndAllFilterValue = <Model>(val: any, op: string) => {
   if (typeof val !== "object" || val === null) {

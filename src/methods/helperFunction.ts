@@ -455,9 +455,18 @@ export const isIntegerVal = (val: unknown): val is number => {
   return isValidNumber(val) && Number.isInteger(val);
 };
 
-export const covertJSDataToSQLData = (data: unknown): string => {
+export const convertJSDataToSQLData = (
+  data: unknown,
+  userType?: string
+): string => {
   if (data === null) {
     return PgDataType.null;
+  } else if (isValidArray(data)) {
+    return `${convertJSDataToSQLData(data[0])}[]`;
+  } else if (isNonEmptyObject(data)) {
+    return PgDataType.jsonb;
+  } else if (isNonEmptyString(userType)) {
+    return userType;
   } else if (typeof data === "boolean") {
     return PgDataType.boolean;
   } else if (typeof data === "string") {
@@ -468,16 +477,12 @@ export const covertJSDataToSQLData = (data: unknown): string => {
     return PgDataType.double;
   } else if (isIntegerVal(data)) {
     return PgDataType.int;
-  } else if (isValidArray(data)) {
-    return `${covertJSDataToSQLData(data[0])}[]`;
-  } else if (isNonEmptyObject(data)) {
-    return PgDataType.jsonb;
   }
   return throwError.invalidDataType(data);
 };
 
 export const prepareSQLDataType = (data: unknown) =>
-  `::${covertJSDataToSQLData(data)}`;
+  `::${convertJSDataToSQLData(data)}`;
 
 //==================================== Field helper depend on object ============================//
 export const covertStrArrayToStr = (

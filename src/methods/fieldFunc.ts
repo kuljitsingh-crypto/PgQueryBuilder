@@ -12,7 +12,6 @@ import {
 } from "../internalTypes";
 import { TableFilter } from "./filterHelper";
 import {
-  covertJSDataToSQLData,
   fieldQuote,
   getPreparedValues,
   prepareSQLDataType,
@@ -54,20 +53,29 @@ const prepareArrayData = (
   groupByFields: GroupByFields,
   allowedFields: AllowedFields,
   wrapArrInParenthesis: boolean,
-  type: string
+  type: string,
+  preparedValReq: boolean
 ) => {
   type = type ? `::${type}[]` : prepareSQLDataType(arr);
-  const arrVal = getPreparedValues(
-    preparedValues,
-    `{${attachArrayWith.coma(arr as any)}}`
-  );
+  const rawVal = `{${attachArrayWith.coma(arr as any)}}`;
+  const arrVal = preparedValReq
+    ? getPreparedValues(preparedValues, rawVal)
+    : `'${rawVal}'`;
   const finalVal = `${arrVal}${type}`;
   return wrapArrInParenthesis
     ? attachArrayWith.noSpace(["(", finalVal, ")"])
     : finalVal;
 };
-const prepareObjectData = (val: object, preparedValues: PreparedValues) => {
-  return getPreparedValues(preparedValues, toJsonStr(val));
+const prepareObjectData = (
+  val: object,
+  preparedValues: PreparedValues,
+  preparedValReq: boolean
+) => {
+  const rawVal = toJsonStr(val);
+  const finalVal = preparedValReq
+    ? getPreparedValues(preparedValues, rawVal)
+    : `'${rawVal}'`;
+  return finalVal;
 };
 
 export const getFieldValue = <Model>(
@@ -87,6 +95,7 @@ export const getFieldValue = <Model>(
     customArrayType?: string;
     wildcardColumn?: boolean;
     wrapArrInParenthesis?: boolean;
+    preparedValReq?: boolean;
   } = {}
 ): string | null => {
   const {
@@ -97,6 +106,7 @@ export const getFieldValue = <Model>(
     treatSimpleObjAsWhereSubQry = true,
     customArrayType = "",
     wrapArrInParenthesis = false,
+    preparedValReq = true,
     ...callableOptions
   } = options;
   if (treatStrAsCol && isNonEmptyString(value)) {
@@ -105,7 +115,9 @@ export const getFieldValue = <Model>(
       wildcardColumn: callableOptions.wildcardColumn,
     });
   } else if (isPrimitiveValue(value)) {
-    return getPreparedValues(preparedValues, value as Primitive);
+    return preparedValReq
+      ? getPreparedValues(preparedValues, value as Primitive)
+      : (value as any);
   } else if (isCallableColumn(value)) {
     const { col } = validCallableColCtx(value, {
       allowedFields,
@@ -186,10 +198,11 @@ export const getFieldValue = <Model>(
       groupByFields,
       allowedFields,
       wrapArrInParenthesis,
-      customArrayType
+      customArrayType,
+      preparedValReq
     );
   } else if (isNonEmptyObject(value)) {
-    return prepareObjectData(value, preparedValues);
+    return prepareObjectData(value, preparedValues, preparedValReq);
   }
   return null;
 };

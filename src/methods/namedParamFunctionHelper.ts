@@ -13,7 +13,7 @@ import {
   getValidCallableFieldValues,
   prepareSQLDataType,
 } from "./helperFunction";
-import { attachArrayWith } from "./util";
+import { attachArrayWith, isValidArray } from "./util";
 
 const prepareValForNamedParam = (
   preparedValues: PreparedValues,
@@ -21,7 +21,7 @@ const prepareValForNamedParam = (
   groupByFields: GroupByFields,
   val: unknown
 ) => {
-  const type = prepareSQLDataType(val);
+  const type = isValidArray(val) ? "" : prepareSQLDataType(val);
   let updateVal = getFieldValue(
     null,
     val,

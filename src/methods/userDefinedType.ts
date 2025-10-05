@@ -56,7 +56,7 @@ export class UserDefinedType {
           ? { onExceptions: { duplicateObject: null } }
           : {};
         await doHelper.run({
-          queries: queryFields,
+          body: attachArrayWith.noSpace(queryFields),
           ...exceptionMaybe,
           showQuery,
         });

@@ -51,7 +51,9 @@ function throwInvalidJsonPathDataTypeError(type: any): never {
 }
 
 function throwInvalidDataTypeError(type: any): never {
-  throw new Error(`Unsupported data type for array: ${typeof type}`);
+  throw new Error(
+    `Unsupported data type: ${typeof type}. Please specify type by yourself.`
+  );
 }
 
 function throwInvalidOpDataTypeError(op: string): never {

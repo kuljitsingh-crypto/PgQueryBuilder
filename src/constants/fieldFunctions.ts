@@ -94,6 +94,7 @@ export const NO_PRAM_FIELD_OP = {
   statementTimestamp: "STATEMENT_TIMESTAMP",
   transactionTimestamp: "TRANSACTION_TIMESTAMP",
   random: "random",
+  randomUUID: "gen_random_uuid",
 };
 
 export const CURRENT_DATE_FIELD_OP = {

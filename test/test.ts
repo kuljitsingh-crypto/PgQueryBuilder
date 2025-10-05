@@ -816,7 +816,7 @@ Company.select(
       // fn.slice([1, 2, 3], 2, 3),
       fn.custom(
         { name: "greet2" },
-        fn.namedParam("name_k", { "3": 6 }),
+        fn.namedParam("name_k", [3]),
         fn.namedParam("initial", "2")
       ),
       // fn.add(1, 2),
@@ -901,7 +901,7 @@ Company.select(
 
 // fn.pgCustom.type
 //   .create({
-//     name: "enummmm",
+//     name: "enummmy",
 //     type: PgDataType.enum(["1", "2", "4"]),
 //     ignoreIfExists: true,
 //     showQuery: true,
@@ -960,18 +960,19 @@ Company.select(
 //   .then(console.log)
 //   .catch(console.log);
 
-// fn.doBlock
-//   .run({
-//     queries: ["CREATE EXTENSION  hstore;"],
-//     onExceptions: { duplicateObject: null },
-//     showQuery: true,
-//   })
-//   .then((res) => {
-//     console.log("do block query->", res);
-//   })
-//   .catch((err) => {
-//     console.log("do block err->", err);
-//   });
+fn.doBlock
+  .run({
+    body: "RAISE NOTICE 'x = %',x;", //"CREATE EXTENSION  hstore; ",
+    onExceptions: { duplicateObject: null },
+    variable: { x: { type: "uuid", val: fn.randomUUID() } },
+    showQuery: true,
+  })
+  .then((res) => {
+    console.log("do block query->", res);
+  })
+  .catch((err) => {
+    console.log("do block err->", err);
+  });
 
 (function () {
   console.log("Test module run");

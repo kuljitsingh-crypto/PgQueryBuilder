@@ -339,16 +339,17 @@ export type QueryExtraOptions = {
   showQuery: boolean;
 };
 
+type DOBlockVar = Primitive | Primitive[] | CallableField | Record<string, any>;
+
 export type DOBlock = {
   variable?: {
-    [Key in string]: {
-      type: keyof typeof simpleDataType;
-      value: Primitive | Primitive[];
-    };
+    [Key in string]:
+      | DOBlockVar
+      | { type: keyof typeof simpleDataType; val: DOBlockVar };
   };
   onExceptions?: {
     [Key in keyof typeof pgException]?: string | null;
   };
   language?: keyof typeof supportedLang;
-  queries: string[];
+  body: string;
 };
