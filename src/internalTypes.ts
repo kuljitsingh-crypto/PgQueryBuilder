@@ -341,7 +341,7 @@ export type QueryExtraOptions = {
 type DOBlockVar = Primitive | Primitive[] | CallableField | Record<string, any>;
 
 export type PGSQlVariable = {
-  [Key in string]: DOBlockVar | { typ: string; val: DOBlockVar };
+  [Key in string]: DOBlockVar | { typ: string; val?: DOBlockVar };
 };
 
 export type DOBlock = {

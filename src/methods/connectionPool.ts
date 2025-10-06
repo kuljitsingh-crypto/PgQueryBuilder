@@ -18,6 +18,13 @@ export class PgConnectionPool {
       database: params.database,
       port: params.port || 5432,
     });
+    this.#pool.on("connect", (client) => {
+      client.on("notice", (msg) => {
+        if (msg.routine === "exec_stmt_raise") {
+          console.log("⚙️ PostgreSQL NOTICE:", msg.message);
+        }
+      });
+    });
   }
 
   get pool() {
