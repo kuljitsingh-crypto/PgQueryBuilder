@@ -74,6 +74,7 @@ export const DB_KEYWORDS = {
   create: "CREATE",
   replace: "REPLACE",
   or: "OR",
+  constant: "constant",
 } as const;
 
 export const WHERE_KEYWORD = "where";

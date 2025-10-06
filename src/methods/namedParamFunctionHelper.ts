@@ -21,8 +21,8 @@ const prepareValForNamedParam = (
   groupByFields: GroupByFields,
   val: unknown
 ) => {
-  const type = isValidArray(val) ? "" : prepareSQLDataType(val);
-  let updateVal = getFieldValue(
+  const type = prepareSQLDataType(val, { hideArrDataType: true });
+  const updateVal = getFieldValue(
     null,
     val,
     preparedValues,
@@ -50,7 +50,7 @@ export const nameParamFn = (
         "groupByFields",
         "allowedFields"
       );
-    name = dynamicFieldQuote(name, []);
+    name = dynamicFieldQuote(name);
     const value = attachArrayWith.noSpace([
       name,
       ":=",

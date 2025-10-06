@@ -49,16 +49,18 @@ export type Arg<Model, P extends Primitive = Primitive> =
   | Record<string, any>;
 
 const prepareArrayData = (
-  key: string | null,
   arr: unknown[],
   preparedValues: PreparedValues,
-  groupByFields: GroupByFields,
-  allowedFields: AllowedFields,
   wrapArrInParenthesis: boolean,
   type: string,
-  preparedValReq: boolean
+  preparedValReq: boolean,
+  typeCastingReq: boolean
 ) => {
-  type = prepareSQLDataType(arr, { userType: type, isArr: true });
+  type = prepareSQLDataType(arr, {
+    userType: type,
+    isArr: true,
+    typeCastingReq,
+  });
   const rawVal = `{${attachArrayWith.coma(arr as any)}}`;
   const arrVal = preparedValReq
     ? getPreparedValues(preparedValues, rawVal)
@@ -98,6 +100,7 @@ export const getFieldValue = <Model>(
     wildcardColumn?: boolean;
     wrapArrInParenthesis?: boolean;
     preparedValReq?: boolean;
+    arrayTypeCastingReq?: boolean;
   } = {}
 ): string | null => {
   const {
@@ -109,6 +112,7 @@ export const getFieldValue = <Model>(
     customArrayType = "",
     wrapArrInParenthesis = false,
     preparedValReq = true,
+    arrayTypeCastingReq = true,
     ...callableOptions
   } = options;
   if (treatStrAsCol && isNonEmptyString(value)) {
@@ -196,14 +200,12 @@ export const getFieldValue = <Model>(
     return query;
   } else if (isValidArray(value)) {
     return prepareArrayData(
-      key,
       value,
       preparedValues,
-      groupByFields,
-      allowedFields,
       wrapArrInParenthesis,
       customArrayType,
-      preparedValReq
+      preparedValReq,
+      arrayTypeCastingReq
     );
   } else if (isNonEmptyObject(value)) {
     return prepareObjectData(value, preparedValues, preparedValReq);

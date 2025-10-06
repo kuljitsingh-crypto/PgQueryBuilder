@@ -10,6 +10,7 @@ import {
 import { getFieldValue } from "./fieldFunc";
 import { convertJSDataToSQLData } from "./helperFunction";
 import { pgConnect } from "./pgHelper";
+import { declarePlpgsqlVariable } from "./pgsqlHelper";
 import {
   appendWithSemicolon,
   attachArrayWith,
@@ -18,52 +19,6 @@ import {
   isUndefined,
   resultHandler,
 } from "./util";
-
-const prepareVariable = (
-  results: string[],
-  preparedValues: PreparedValues,
-  allowedFields: AllowedFields,
-  groupByFields: GroupByFields,
-  variables?: DOBlock["variable"]
-) => {
-  if (isNonEmptyObject(variables)) {
-    const vars = Object.entries(variables);
-    if (vars.length < 1) {
-      return;
-    }
-    results.push(DB_KEYWORDS.declare);
-    vars.forEach(([key, val]) => {
-      const isTypeVal =
-        isNonEmptyObject(val) &&
-        isNonEmptyString((val as any).type) &&
-        !isUndefined((val as any).val);
-      const type = isTypeVal
-        ? convertJSDataToSQLData((val as any).val, (val as any).type)
-        : convertJSDataToSQLData(val);
-      val = isTypeVal ? (val as any).val : val;
-      const value = getFieldValue(
-        null,
-        val,
-        preparedValues,
-        groupByFields,
-        allowedFields,
-        {
-          wildcardColumn: true,
-          wrapArrInParenthesis: false,
-          treatSimpleObjAsWhereSubQry: false,
-          preparedValReq: false,
-        }
-      );
-      if (type) {
-        const variable = attachArrayWith.noSpace(
-          [key, " ", type, ":=", value, ";"],
-          false
-        );
-        results.push(variable);
-      }
-    });
-  }
-};
 
 const prepareExceptions = (
   results: string[],
@@ -106,8 +61,9 @@ class DOHelper {
  * 
  * @param {object} params
  * @param {DOBlock['body']} params.body
- * @param {DOBlock['language']} [params.language]
+ * @param {DOBlock['lang']} [params.lang]
  * @param {DOBlock['variable']} [params.variable]
+ * @param {DOBlock['constant']} [params.constant]
  * @param {DOBlock['onExceptions']} [params.onExceptions ]- If You wan to raise custom error Message. Pass message as value,
    If you did not want to do anything pass null as value. If Leave undefined, raise default exception message.
  */
@@ -116,19 +72,20 @@ class DOHelper {
     const allowedFields: Set<string> = new Set();
     const groupByFields: Set<string> = new Set();
     const endStr = appendWithSemicolon(DB_KEYWORDS.end);
-    const { variable, body, onExceptions, language = "plpgsql" } = params;
+    const { variable, constant, body, onExceptions, lang = "plpgsql" } = params;
     const results: string[] = [DB_KEYWORDS.do, "$$"];
-    prepareVariable(
+    declarePlpgsqlVariable(
       results,
       preparedValues,
       allowedFields,
       groupByFields,
-      variable
+      variable,
+      constant
     );
     results.push(DB_KEYWORDS.begin);
     prepareQueries(results, body);
     prepareExceptions(results, onExceptions);
-    results.push(endStr, "$$", DB_KEYWORDS.language, supportedLang[language]);
+    results.push(endStr, "$$", DB_KEYWORDS.language, supportedLang[lang]);
     return {
       query: appendWithSemicolon(attachArrayWith.space(results)),
       params: preparedValues.values,
@@ -139,8 +96,9 @@ class DOHelper {
  * 
  * @param {object} params
  * @param {DOBlock['body']} params.body
- * @param {DOBlock['language']} [params.language]
+ * @param {DOBlock['lang']} [params.lang]
  * @param {DOBlock['variable']} [params.variable]
+ * @param {DOBlock['constant']} [params.constant]
  * @param {DOBlock['onExceptions']} [params.onExceptions ]- If You wan to raise custom error Message. Pass message as value,
    If you did not want to do anything pass null as value. If Leave undefined, raise default exception message.
  */

@@ -12,7 +12,7 @@ import { JPathBuilder } from "./jsonQueryBuilder";
 import { nameParamFn } from "./namedParamFunctionHelper";
 import { typeCastFn } from "./typeCastHelper";
 import { UserDefinedType } from "./userDefinedType";
-import { attachArrayWith, toPgStr } from "./util";
+import { appendWithSemicolon, attachArrayWith, toPgStr } from "./util";
 import { frameFn, windowFn } from "./windowFunctionHelper";
 
 type AggrKeys = keyof typeof aggregateFn;
@@ -96,12 +96,16 @@ class GlobalFunction {
     const jPathBuilder = new JPathBuilder(root);
     return jPathBuilder;
   }
-  raiseNotice(msg: string, ...params: Primitive[]) {
-    return attachArrayWith.space([
-      DB_KEYWORDS.raiseNotice,
-      toPgStr(msg),
-      attachArrayWith.coma(params),
-    ]);
+  raiseNotice(msg: string, ...params: string[]) {
+    const varPlaceholder =
+      params.length > 0 ? attachArrayWith.coma(["", ...params], false) : "";
+    return appendWithSemicolon(
+      attachArrayWith.space([
+        DB_KEYWORDS.raiseNotice,
+        toPgStr(msg),
+        varPlaceholder,
+      ])
+    );
   }
   namedParam(
     ...args: Parameters<typeof nameParamFn>

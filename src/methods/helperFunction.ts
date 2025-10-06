@@ -489,15 +489,24 @@ export const prepareSQLDataType = (
     userType?: string;
     throwErrOnInvalidDataType?: boolean;
     isArr?: boolean;
+    hideArrDataType?: boolean;
+    typeCastingReq?: boolean;
   }
 ) => {
   const {
     userType,
     throwErrOnInvalidDataType = true,
     isArr = false,
+    hideArrDataType = false,
+    typeCastingReq = true,
   } = options || {};
   try {
-    return `::${convertJSDataToSQLData(data)}`;
+    if (!typeCastingReq) {
+      return "";
+    }
+    return hideArrDataType && isValidArray(data)
+      ? ""
+      : `::${convertJSDataToSQLData(data)}`;
   } catch (err) {
     if (isNonEmptyString(userType)) {
       return `::${userType}${isArr ? "[]" : ""}`;

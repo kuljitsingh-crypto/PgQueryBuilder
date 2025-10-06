@@ -340,13 +340,31 @@ export type QueryExtraOptions = {
 
 type DOBlockVar = Primitive | Primitive[] | CallableField | Record<string, any>;
 
+export type PGSQlVariable = {
+  [Key in string]: DOBlockVar | { typ: string; val: DOBlockVar };
+};
+
 export type DOBlock = {
-  variable?: {
-    [Key in string]: DOBlockVar | { type: string; val: DOBlockVar };
-  };
+  variable?: PGSQlVariable;
+  constant?: PGSQlVariable;
   onExceptions?: {
     [Key in keyof typeof pgException]?: string | null;
   };
-  language?: keyof typeof supportedLang;
+  lang?: keyof typeof supportedLang;
   body: string;
+};
+
+export type DefaultValue =
+  | Primitive
+  | Primitive[]
+  | Record<string, any>
+  | CallableField
+  | Function;
+
+export type UserDefinedFn = {
+  name: string;
+  params: { [x in string]: { type: string; default?: DefaultValue } };
+  returns: string;
+  lang?: keyof typeof supportedLang;
+  // window:
 };
