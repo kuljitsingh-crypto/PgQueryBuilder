@@ -27,13 +27,13 @@ class DOHelper {
       blockParams: any[] = [];
     const { lang, variable, constant, body, onExceptions } = params || {};
     try {
-      const qry = Plpgsql.doMainStart({ lang, body })
+      const qry = Plpgsql.doMain({ lang, body })
         .declare({
           variables: variable,
           constants: constant,
         })
         .exception(onExceptions as any)
-        .mainEnd();
+        .endMain();
       blockStr = qry.query;
       blockParams = qry.params;
       const resp = await pgConnect.connection.query({

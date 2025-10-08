@@ -201,22 +201,16 @@ export class Plpgsql {
     }
     return instance;
   }
-  static doMainStart(params?: {
-    lang?: keyof typeof supportedLang;
-    body?: string;
-  }) {
+  static doMain(params?: { lang?: keyof typeof supportedLang; body?: string }) {
     const { lang, body } = params || {};
     return Plpgsql.#blockStart({ isMain: true, isDoBlock: true, lang, body });
   }
-  static mainStart(params?: {
-    lang?: keyof typeof supportedLang;
-    body?: string;
-  }) {
+  static main(params?: { lang?: keyof typeof supportedLang; body?: string }) {
     const { lang, body } = params || {};
     return Plpgsql.#blockStart({ isMain: true, isDoBlock: false, lang, body });
   }
 
-  static bodyStart() {
+  static body() {
     return Plpgsql.#blockStart({
       isMain: false,
       isDoBlock: false,
@@ -233,7 +227,7 @@ export class Plpgsql {
     // }
     // return this;
   }
-  subStart(blockName: string) {
+  block(blockName: string) {
     this.#state.results.push(blockName);
     return;
   }
@@ -308,18 +302,18 @@ export class Plpgsql {
     return this;
   }
 
-  subEnd() {
+  endBlock() {
     const endStr = appendWithSemicolon(
       attachArrayWith.space([DB_KEYWORDS.end, this.#state.blockName])
     );
     this.#state.results.push(endStr);
     return this;
   }
-  bodyEnd() {
+  endBody() {
     return attachArrayWith.space(this.#state.results);
   }
 
-  mainEnd() {
+  endMain() {
     const endStr = appendWithSemicolon(
       attachArrayWith.space([DB_KEYWORDS.end, this.#state.blockName])
     );

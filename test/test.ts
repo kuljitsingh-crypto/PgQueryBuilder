@@ -963,10 +963,10 @@ Company.select(
 
 fn.doBlock
   .run({
-    body: Plpgsql.bodyStart()
+    body: Plpgsql.body()
       .assign({ x: fn.add("x", 1) })
       .log("x = %", "x")
-      .bodyEnd(),
+      .endBody(),
     // fn.raiseNotice("x = %", "x"), //"CREATE EXTENSION  hstore; ",
     onExceptions: { duplicateObject: null },
     variable: {
@@ -987,7 +987,7 @@ fn.doBlock
 // console.log(
 //   Plpgsql.mainStart()
 //     .assign({ x: 3, p: fn.add("p", 1) })
-//     .mainEnd()
+//     .endMain()
 // );
 
 (function () {
