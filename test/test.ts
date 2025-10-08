@@ -1,6 +1,6 @@
 import "dotenv/config";
 
-import { PgDataType, DBModel, fn, PgQueryBuilder } from "../src";
+import { PgDataType, DBModel, fn, PgQueryBuilder, Plpgsql } from "../src";
 
 const DB_PORT = parseInt(process.env.POSTGRES_DB_PORT || "5432", 10);
 
@@ -963,7 +963,11 @@ Company.select(
 
 fn.doBlock
   .run({
-    body: fn.raiseNotice("x = %", "x"), //"CREATE EXTENSION  hstore; ",
+    body: Plpgsql.bodyStart()
+      .assign({ x: fn.add("x", 1) })
+      .log("x = %", "x")
+      .bodyEnd(),
+    // fn.raiseNotice("x = %", "x"), //"CREATE EXTENSION  hstore; ",
     onExceptions: { duplicateObject: null },
     variable: {
       x: 6,
@@ -979,6 +983,12 @@ fn.doBlock
   .catch((err) => {
     console.log("do block err->", err);
   });
+
+// console.log(
+//   Plpgsql.mainStart()
+//     .assign({ x: 3, p: fn.add("p", 1) })
+//     .mainEnd()
+// );
 
 (function () {
   console.log("Test module run");

@@ -1,8 +1,10 @@
 import { DB_KEYWORDS } from "../constants/dbkeywords";
 import { pgException } from "../constants/exceptions";
 import { supportedLang } from "../constants/language";
+import { Primitive } from "../globalTypes";
 import {
   AllowedFields,
+  CallableField,
   DOBlock,
   GroupByFields,
   PGSQlVariable,
@@ -13,8 +15,10 @@ import { convertJSDataToSQLData } from "./helperFunction";
 import {
   appendWithSemicolon,
   attachArrayWith,
+  isEmptyObject,
   isNonEmptyObject,
   isNonEmptyString,
+  isPrimitiveValue,
   isUndefined,
   toPgStr,
 } from "./util";
@@ -122,15 +126,30 @@ const prepareExceptions = (
   }
 };
 
+type PrivateState = {
+  preparedValues: PreparedValues;
+  allowedFields: AllowedFields;
+  groupByFields: GroupByFields;
+  results: string[];
+  lang: string;
+  isMainBlock: boolean;
+  blockName: string;
+  mainIndx: number;
+  isBody: boolean;
+};
 export class Plpgsql {
   static #calledThroughGetInstance = false;
-  #results: string[] = [];
-  #lang: string = supportedLang.plpgsql;
-  #preparedValues: PreparedValues = { values: [], index: 0 };
-  #allowedFields: AllowedFields = new Set();
-  #groupByFields: GroupByFields = new Set();
-  #isMainBlock = false;
-  #blockName = "";
+  #state: PrivateState = {
+    preparedValues: { values: [], index: 0 },
+    groupByFields: new Set(),
+    allowedFields: new Set(),
+    results: [],
+    lang: supportedLang.plpgsql,
+    isMainBlock: false,
+    blockName: "",
+    mainIndx: -1,
+    isBody: false,
+  };
 
   constructor() {
     if (!Plpgsql.#calledThroughGetInstance) {
@@ -145,91 +164,173 @@ export class Plpgsql {
     Plpgsql.#calledThroughGetInstance = false;
     return obj;
   }
-  static printMsg(msg: string, ...params: string[]) {
+
+  static #blockStart({
+    isMain,
+    lang,
+    isDoBlock = false,
+    blockName,
+    isBody = false,
+    body = "",
+  }: {
+    isMain: boolean;
+    lang?: keyof typeof supportedLang;
+    isDoBlock?: boolean;
+    blockName?: string;
+    isBody?: boolean;
+    body?: string;
+  }) {
+    const instance = Plpgsql.#getInstance();
+    instance.#state.lang =
+      (lang && supportedLang[lang]) || supportedLang.plpgsql;
+    instance.#state.isMainBlock = isMain;
+    instance.#state.isBody = isBody;
+    if (isDoBlock) {
+      instance.#state.results.push(DB_KEYWORDS.do);
+    }
+    if (isNonEmptyString(blockName)) {
+      blockName = `<<${blockName}>>`;
+      instance.#state.results.push(blockName);
+    } else if (isMain) {
+      instance.#state.results.push("$$");
+    }
+    if (!isBody) {
+      instance.#state.mainIndx = instance.#state.results.length;
+      instance.#state.results.push(DB_KEYWORDS.begin);
+      instance.#state.results.push(body);
+    }
+    return instance;
+  }
+  static doMainStart(params?: {
+    lang?: keyof typeof supportedLang;
+    body?: string;
+  }) {
+    const { lang, body } = params || {};
+    return Plpgsql.#blockStart({ isMain: true, isDoBlock: true, lang, body });
+  }
+  static mainStart(params?: {
+    lang?: keyof typeof supportedLang;
+    body?: string;
+  }) {
+    const { lang, body } = params || {};
+    return Plpgsql.#blockStart({ isMain: true, isDoBlock: false, lang, body });
+  }
+
+  static bodyStart() {
+    return Plpgsql.#blockStart({
+      isMain: false,
+      isDoBlock: false,
+      isBody: true,
+    });
+
+    // this.#results.push(DB_KEYWORDS.begin);
+    // if (isNonEmptyString(body)) {
+    //   this.#results.push(body);
+    // } else if (isNonEmptyString(body?.query)) {
+    //   this.#results.push(body.query);
+    //   this.#preparedValues.values.push(...body.params);
+    //   this.#preparedValues.index += body.params.length;
+    // }
+    // return this;
+  }
+  subStart(blockName: string) {
+    this.#state.results.push(blockName);
+    return;
+  }
+
+  declare(params: { variables?: PGSQlVariable; constants?: PGSQlVariable }) {
+    if (this.#state.mainIndx < 0) {
+      return this;
+    }
+    const { variables, constants } = params;
+    const rs: string[] = [];
+    preparePlpgsqlVariable(
+      rs,
+      this.#state.preparedValues,
+      this.#state.allowedFields,
+      this.#state.groupByFields,
+      variables
+    );
+    preparePlpgsqlConstant(
+      rs,
+      this.#state.preparedValues,
+      this.#state.allowedFields,
+      this.#state.groupByFields,
+      constants
+    );
+    if (rs.length > 0) {
+      this.#state.results.splice(
+        this.#state.mainIndx,
+        0,
+        DB_KEYWORDS.declare,
+        ...rs
+      );
+    }
+    return this;
+  }
+
+  exception(exceptions: { [Key in keyof typeof pgException]?: string | null }) {
+    prepareExceptions(this.#state.results, exceptions);
+    return this;
+  }
+
+  assign(values: Record<string, Primitive | CallableField>) {
+    if (isEmptyObject(values)) {
+      return this;
+    }
+    Object.entries(values).forEach(([key, val]) => {
+      val = getFieldValue(
+        null,
+        val,
+        this.#state.preparedValues,
+        this.#state.groupByFields,
+        this.#state.allowedFields,
+        { preparedValReq: false }
+      );
+      this.#state.results.push(
+        appendWithSemicolon(attachArrayWith.space([key, "=", val]))
+      );
+    });
+    return this;
+  }
+
+  log(msg: string, ...params: string[]) {
     const varPlaceholder =
       params.length > 0 ? attachArrayWith.coma(["", ...params], false) : "";
-    return appendWithSemicolon(
+    const finalMsg = appendWithSemicolon(
       attachArrayWith.space([
         DB_KEYWORDS.raiseNotice,
         toPgStr(msg),
         varPlaceholder,
       ])
     );
-  }
-  static doMainBlock(lang?: keyof typeof supportedLang) {
-    const instance = Plpgsql.#getInstance();
-    instance.#lang = (lang && supportedLang[lang]) || supportedLang.plpgsql;
-    instance.#isMainBlock = true;
-    instance.#results.push(DB_KEYWORDS.do);
-    instance.#results.push("$$");
-    return instance;
-  }
-  static mainBlock(lang?: keyof typeof supportedLang) {
-    const instance = Plpgsql.#getInstance();
-    instance.#lang = (lang && supportedLang[lang]) || supportedLang.plpgsql;
-    instance.#isMainBlock = true;
-    instance.#results.push("$$");
-    return instance;
-  }
-  static subBlock(blockName: string) {
-    const instance = Plpgsql.#getInstance();
-    instance.#isMainBlock = false;
-    instance.#blockName = blockName;
-    blockName = `<<${blockName}>>`;
-    instance.#results.push(blockName);
-    return instance;
+    this.#state.results.push(finalMsg);
+    return this;
   }
 
-  declare(params: { variables?: PGSQlVariable; constants?: PGSQlVariable }) {
-    const { variables, constants } = params;
-    const rs: string[] = [];
-    preparePlpgsqlVariable(
-      rs,
-      this.#preparedValues,
-      this.#allowedFields,
-      this.#groupByFields,
-      variables
-    );
-    preparePlpgsqlConstant(
-      rs,
-      this.#preparedValues,
-      this.#allowedFields,
-      this.#groupByFields,
-      constants
-    );
-    if (rs.length > 0) {
-      this.#results.push(DB_KEYWORDS.declare);
-      this.#results.push(...rs);
-    }
-    return this;
-  }
-  body(body?: string | { query: string; params: any[] }) {
-    this.#results.push(DB_KEYWORDS.begin);
-    if (isNonEmptyString(body)) {
-      this.#results.push(body);
-    } else if (isNonEmptyString(body?.query)) {
-      this.#results.push(body.query);
-      this.#preparedValues.values.push(...body.params);
-      this.#preparedValues.index += body.params.length;
-    }
-    return this;
-  }
-  exception(exceptions: { [Key in keyof typeof pgException]?: string | null }) {
-    prepareExceptions(this.#results, exceptions);
-    return this;
-  }
-  end() {
+  subEnd() {
     const endStr = appendWithSemicolon(
-      attachArrayWith.space([DB_KEYWORDS.end, this.#blockName])
+      attachArrayWith.space([DB_KEYWORDS.end, this.#state.blockName])
     );
-    this.#results.push(endStr);
-    if (this.#isMainBlock) {
-      this.#results.push("$$", DB_KEYWORDS.language, this.#lang);
+    this.#state.results.push(endStr);
+    return this;
+  }
+  bodyEnd() {
+    return attachArrayWith.space(this.#state.results);
+  }
+
+  mainEnd() {
+    const endStr = appendWithSemicolon(
+      attachArrayWith.space([DB_KEYWORDS.end, this.#state.blockName])
+    );
+    this.#state.results.push(endStr);
+    if (this.#state.isMainBlock) {
+      this.#state.results.push("$$", DB_KEYWORDS.language, this.#state.lang);
     }
-    let resultStr = attachArrayWith.space(this.#results);
-    if (this.#isMainBlock) {
+    let resultStr = attachArrayWith.space(this.#state.results);
+    if (this.#state.isMainBlock) {
       resultStr = appendWithSemicolon(resultStr);
     }
-    return { query: resultStr, params: this.#preparedValues.values };
+    return { query: resultStr, params: this.#state.preparedValues.values };
   }
 }
